@@ -12,34 +12,36 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun FeedScreen(
+fun ProfileScreen(
+    username: String,
     currentUserName: String,
-    onLogout: () -> Unit,
-    onOpenProfile: () -> Unit
+    onBack: () -> Unit
 ) {
 
+    var name by remember { mutableStateOf("") }
     var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
-    var loading by remember { mutableStateOf(false) }
-    var newPost by remember { mutableStateOf("") }
+    var loading by remember { mutableStateOf(true) }
 
-    // 🔑 store comment text per post ID
+    // 🔑 comment text per post
     val commentTexts = remember { mutableStateMapOf<String, String>() }
 
     val scope = rememberCoroutineScope()
 
-    suspend fun loadFeed() {
+    suspend fun loadProfile() {
         loading = true
         try {
-            posts = withContext(Dispatchers.IO) {
-                AuthApi.fetchFeed()
+            val result = withContext(Dispatchers.IO) {
+                AuthApi.fetchProfile(username)
             }
+            name = result.first
+            posts = result.second
         } finally {
             loading = false
         }
     }
 
-    LaunchedEffect(Unit) {
-        loadFeed()
+    LaunchedEffect(username) {
+        loadProfile()
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -51,47 +53,24 @@ fun FeedScreen(
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            TextButton(onClick = onOpenProfile) {
-                Text("Facemash", style = MaterialTheme.typography.headlineSmall)
-            }
-            Button(onClick = onLogout) {
-                Text("Logout")
+            Text("Profile", style = MaterialTheme.typography.headlineSmall)
+            Button(onClick = onBack) {
+                Text("Back")
             }
         }
-
-        // Create Post
-        Column(modifier = Modifier.padding(16.dp)) {
-            OutlinedTextField(
-                value = newPost,
-                onValueChange = { newPost = it },
-                label = { Text("What's on your mind?") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Button(
-                enabled = newPost.isNotBlank(),
-                onClick = {
-                    scope.launch {
-                        withContext(Dispatchers.IO) {
-                            AuthApi.createPost(newPost)
-                        }
-                        newPost = ""
-                        loadFeed()
-                    }
-                }
-            ) {
-                Text("Post")
-            }
-        }
-
-        Divider()
 
         if (loading) {
-            Text("Loading feed...", modifier = Modifier.padding(16.dp))
+            Text("Loading profile...", modifier = Modifier.padding(16.dp))
         } else {
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(name, style = MaterialTheme.typography.titleLarge)
+                Text("@$username", color = MaterialTheme.colorScheme.primary)
+            }
+
+            Divider()
+
+            LazyColumn {
                 items(posts, key = { it._id }) { post ->
 
                     val commentText = commentTexts[post._id] ?: ""
@@ -102,17 +81,12 @@ fun FeedScreen(
                             .padding(16.dp)
                     ) {
 
-                        Text(
-                            "${post.fName} ${post.lName}",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-
-                        Spacer(modifier = Modifier.height(4.dp))
+                        // Post content
                         Text(post.content)
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Comments
+                        // Existing comments
                         post.comments.forEach { comment ->
                             Text(
                                 "${comment.commenter}: ${comment.commentContent}",
@@ -144,7 +118,7 @@ fun FeedScreen(
                                         )
                                     }
                                     commentTexts[post._id] = ""
-                                    loadFeed()
+                                    loadProfile()
                                 }
                             }
                         ) {

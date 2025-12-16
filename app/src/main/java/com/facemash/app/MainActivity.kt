@@ -23,6 +23,9 @@ class MainActivity : ComponentActivity() {
             var isLoggedIn by remember { mutableStateOf(false) }
             var userInfo by remember { mutableStateOf("") }
             var checkingSession by remember { mutableStateOf(true) }
+            var viewingProfile by remember { mutableStateOf<String?>(null) }
+            var currentUsername by remember { mutableStateOf("") }
+            var currentFullName by remember { mutableStateOf("") }
 
             val scope = rememberCoroutineScope()
 
@@ -35,6 +38,17 @@ class MainActivity : ComponentActivity() {
                 if (sessionResult.contains("uname")) {
                     isLoggedIn = true
                     userInfo = sessionResult
+
+                    val fNameRegex = """"fName"\s*:\s*"([^"]+)"""".toRegex()
+                    val lNameRegex = """"lName"\s*:\s*"([^"]+)"""".toRegex()
+
+                    val fName = fNameRegex.find(sessionResult)?.groupValues?.get(1) ?: ""
+                    val lName = lNameRegex.find(sessionResult)?.groupValues?.get(1) ?: ""
+
+                    currentFullName = "$fName $lName"
+
+                    val unameRegex = """"uname"\s*:\s*"([^"]+)"""".toRegex()
+                    currentUsername = unameRegex.find(sessionResult)?.groupValues?.get(1) ?: ""
                 }
                 checkingSession = false
             }
@@ -44,10 +58,24 @@ class MainActivity : ComponentActivity() {
                     Text("Checking session...")
                 }
                 isLoggedIn -> {
-                    FeedScreen {
-                        ApiClient.clearCookies(applicationContext)
-                        isLoggedIn = false
-                        userInfo = ""
+                    if (viewingProfile != null) {
+                        ProfileScreen(
+                            username = viewingProfile!!,
+                            currentUserName = currentFullName,
+                            onBack = { viewingProfile = null }
+                        )
+                    } else {
+                        FeedScreen(
+                            currentUserName = currentFullName,
+                            onLogout = {
+                                ApiClient.clearCookies(applicationContext)
+                                isLoggedIn = false
+                                userInfo = ""
+                            },
+                            onOpenProfile = {
+                                viewingProfile = currentUsername
+                            }
+                        )
                     }
                 }
                 else -> {
@@ -60,6 +88,18 @@ class MainActivity : ComponentActivity() {
                             onLoginSuccess = { sessionData ->
                                 isLoggedIn = true
                                 userInfo = sessionData
+
+                                // extract username safely
+                                val unameRegex = """"uname"\s*:\s*"([^"]+)"""".toRegex()
+                                currentUsername = unameRegex.find(sessionData)?.groupValues?.get(1) ?: ""
+
+                                val fNameRegex = """"fName"\s*:\s*"([^"]+)"""".toRegex()
+                                val lNameRegex = """"lName"\s*:\s*"([^"]+)"""".toRegex()
+
+                                val fName = fNameRegex.find(sessionData)?.groupValues?.get(1) ?: ""
+                                val lName = lNameRegex.find(sessionData)?.groupValues?.get(1) ?: ""
+
+                                currentFullName = "$fName $lName"
                             },
                             onSignup = {
                                 showSignup = true

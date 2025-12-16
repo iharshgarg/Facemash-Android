@@ -82,27 +82,73 @@ object AuthApi {
 
 
     fun fetchFeed(): List<Post> {
-        val request = Request.Builder()
+
+        val request = okhttp3.Request.Builder()
             .url("${ApiClient.BASE_URL}/feed")
             .get()
             .build()
 
         ApiClient.client.newCall(request).execute().use { response ->
+
+            if (!response.isSuccessful) return emptyList()
+
             val body = response.body?.string() ?: return emptyList()
-            val jsonArray = JSONArray(body)
+            val jsonArray = org.json.JSONArray(body)
 
             val posts = mutableListOf<Post>()
+
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
+
+                val commentsArray = obj.getJSONArray("comments")
+                val comments = mutableListOf<Comment>()
+
+                for (j in 0 until commentsArray.length()) {
+                    val c = commentsArray.getJSONObject(j)
+                    comments.add(
+                        Comment(
+                            commenter = c.getString("commenter"),
+                            commentContent = c.getString("commentContent")
+                        )
+                    )
+                }
+
                 posts.add(
                     Post(
+                        _id = obj.getString("_id"),
                         fName = obj.getString("fName"),
                         lName = obj.getString("lName"),
-                        content = obj.getString("content")
+                        content = obj.getString("content"),
+                        comments = comments
                     )
                 )
             }
             return posts
+        }
+    }
+
+    fun addComment(
+        postId: String,
+        commenter: String,
+        commentContent: String
+    ): Boolean {
+
+        val json = org.json.JSONObject().apply {
+            put("_id", postId)
+            put("commenter", commenter)
+            put("commentContent", commentContent)
+        }
+
+        val body = json.toString()
+            .toRequestBody("application/json".toMediaType())
+
+        val request = okhttp3.Request.Builder()
+            .url("${ApiClient.BASE_URL}/post-comment")
+            .post(body)
+            .build()
+
+        ApiClient.client.newCall(request).execute().use {
+            return it.isSuccessful
         }
     }
 
@@ -122,6 +168,59 @@ object AuthApi {
 
         ApiClient.client.newCall(request).execute().use { response ->
             return response.body?.string() ?: "Post failed"
+        }
+    }
+
+    fun fetchProfile(username: String): Pair<String, List<Post>> {
+
+        val request = okhttp3.Request.Builder()
+            .url("${ApiClient.BASE_URL}/users/$username")
+            .get()
+            .build()
+
+        ApiClient.client.newCall(request).execute().use { response ->
+
+            if (!response.isSuccessful) {
+                return Pair("", emptyList())
+            }
+
+            val body = response.body?.string() ?: return Pair("", emptyList())
+            val obj = org.json.JSONObject(body)
+
+            val fullName = obj.getString("fName") + " " + obj.getString("lName")
+
+            val postsArray = obj.getJSONArray("posts")
+            val posts = mutableListOf<Post>()
+
+            for (i in 0 until postsArray.length()) {
+                val p = postsArray.getJSONObject(i)
+
+                // parse comments
+                val commentsArray = p.getJSONArray("comments")
+                val comments = mutableListOf<Comment>()
+
+                for (j in 0 until commentsArray.length()) {
+                    val c = commentsArray.getJSONObject(j)
+                    comments.add(
+                        Comment(
+                            commenter = c.getString("commenter"),
+                            commentContent = c.getString("commentContent")
+                        )
+                    )
+                }
+
+                posts.add(
+                    Post(
+                        _id = p.getString("_id"),
+                        fName = p.getString("fName"),
+                        lName = p.getString("lName"),
+                        content = p.getString("content"),
+                        comments = comments
+                    )
+                )
+            }
+
+            return Pair(fullName, posts)
         }
     }
 }
