@@ -68,7 +68,7 @@ class MainActivity : ComponentActivity() {
                         FeedScreen(
                             currentUserName = currentFullName,
                             onLogout = {
-                                ApiClient.clearCookies(applicationContext)
+                                ApiClient.clearCookies()
                                 isLoggedIn = false
                                 userInfo = ""
                             },

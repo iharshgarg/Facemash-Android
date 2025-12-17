@@ -10,5 +10,6 @@ data class Post(
     val fName: String,
     val lName: String,
     val content: String,
+    val image: String?,        // 👈 image URL (nullable)
     val comments: List<Comment>
 )

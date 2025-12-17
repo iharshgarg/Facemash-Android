@@ -10,6 +10,9 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ProfileScreen(
@@ -17,6 +20,8 @@ fun ProfileScreen(
     currentUserName: String,
     onBack: () -> Unit
 ) {
+
+    val context = LocalContext.current
 
     var name by remember { mutableStateOf("") }
     var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
@@ -83,6 +88,22 @@ fun ProfileScreen(
 
                         // Post content
                         Text(post.content)
+
+                        if (!post.image.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data("${ApiClient.BASE_URL}/pics/${post.image}")
+                                    .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                    .allowHardware(false)
+                                    .build(),
+                                contentDescription = "Post image",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(250.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(8.dp))
 

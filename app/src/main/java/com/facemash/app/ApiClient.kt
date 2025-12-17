@@ -14,9 +14,13 @@ object ApiClient {
     lateinit var client: OkHttpClient
         private set
 
-    fun init(context: Context) {
+    // ✅ application context stored safely
+    private lateinit var appContext: Context
 
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    fun init(context: Context) {
+        appContext = context.applicationContext
+
+        val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
         val cookieJar = object : CookieJar {
 
@@ -43,8 +47,13 @@ object ApiClient {
             .build()
     }
 
-    fun clearCookies(context: Context) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    fun getCookieHeader(): String? {
+        val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(COOKIE_KEY, null)
+    }
+
+    fun clearCookies() {
+        val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
     }
 

@@ -10,6 +10,9 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun FeedScreen(
@@ -91,6 +94,10 @@ fun FeedScreen(
         if (loading) {
             Text("Loading feed...", modifier = Modifier.padding(16.dp))
         } else {
+            val context = LocalContext.current
+            val imageLoader = remember {
+                ImageLoaderProvider.get(context)
+            }
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(posts, key = { it._id }) { post ->
 
@@ -109,6 +116,36 @@ fun FeedScreen(
 
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(post.content)
+
+                        if (!post.image.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            val cookie = ApiClient.getCookieHeader()
+
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data("${ApiClient.BASE_URL}/pics/${post.image}")
+                                    .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                    .allowHardware(false)
+                                    .listener(
+                                        onStart = {
+                                            println("IMAGE STARTED: ${post.image}")
+                                        },
+                                        onSuccess = { _, _ ->
+                                            println("IMAGE SUCCESS: ${post.image}")
+                                        },
+                                        onError = { _, result ->
+                                            println("IMAGE FAILED: ${post.image}")
+                                            println("ERROR: ${result.throwable}")
+                                        }
+                                    )
+                                    .build(),
+                                contentDescription = "Post image",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(250.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(8.dp))
 

@@ -113,12 +113,19 @@ object AuthApi {
                     )
                 }
 
+                val imageValue = if (obj.has("image") && !obj.isNull("image")) {
+                    obj.getString("image")
+                } else {
+                    null
+                }
+
                 posts.add(
                     Post(
                         _id = obj.getString("_id"),
                         fName = obj.getString("fName"),
                         lName = obj.getString("lName"),
                         content = obj.getString("content"),
+                        image = imageValue,
                         comments = comments
                     )
                 )
@@ -209,12 +216,19 @@ object AuthApi {
                     )
                 }
 
+                val imageValue = if (p.has("image") && !p.isNull("image")) {
+                    p.getString("image")
+                } else {
+                    null
+                }
+
                 posts.add(
                     Post(
                         _id = p.getString("_id"),
                         fName = p.getString("fName"),
                         lName = p.getString("lName"),
                         content = p.getString("content"),
+                        image = imageValue,
                         comments = comments
                     )
                 )
