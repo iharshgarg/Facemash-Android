@@ -13,6 +13,8 @@ import kotlinx.coroutines.withContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 
 @Composable
 fun ProfileScreen(
@@ -86,13 +88,40 @@ fun ProfileScreen(
                             .padding(16.dp)
                     ) {
 
-                        // Post content
+                        // 🔹 HEADER (DP + Name) — SAME AS FEED
+                        Row(
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data("${ApiClient.BASE_URL}/dp/${post.uname}")
+                                    .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                    .allowHardware(false)
+                                    .build(),
+                                contentDescription = "Profile picture",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                "${post.fName} ${post.lName}",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // 🔹 POST CONTENT
                         Text(
                             post.content,
                             style = MaterialTheme.typography.bodyLarge
                         )
 
-                        // Post image (if exists)
+                        // 🔹 POST IMAGE (IF ANY)
                         if (!post.image.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
 
@@ -109,7 +138,7 @@ fun ProfileScreen(
                             )
                         }
 
-                        // Post date
+                        // 🔹 DATE
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             formatPostDate(post.createdAt),
@@ -119,7 +148,7 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Existing comments
+                        // 🔹 COMMENTS
                         post.comments.forEach { comment ->
                             Text(
                                 "${comment.commenter}: ${comment.commentContent}",
@@ -129,7 +158,7 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Add comment
+                        // 🔹 ADD COMMENT
                         OutlinedTextField(
                             value = commentText,
                             onValueChange = {
