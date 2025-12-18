@@ -127,6 +127,7 @@ object AuthApi {
                 posts.add(
                     Post(
                         _id = obj.getString("_id"),
+                        uname = obj.getString("uname"),
                         fName = obj.getString("fName"),
                         lName = obj.getString("lName"),
                         content = obj.getString("content"),
@@ -263,6 +264,7 @@ object AuthApi {
                 posts.add(
                     Post(
                         _id = p.getString("_id"),
+                        uname = obj.getString("uname"),
                         fName = p.getString("fName"),
                         lName = p.getString("lName"),
                         content = p.getString("content"),

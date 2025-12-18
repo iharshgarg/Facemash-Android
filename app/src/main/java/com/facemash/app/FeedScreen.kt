@@ -16,6 +16,8 @@ import androidx.compose.ui.platform.LocalContext
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 @Composable
 fun FeedScreen(
     currentUserName: String,
@@ -141,10 +143,29 @@ fun FeedScreen(
                             .padding(16.dp)
                     ) {
 
-                        Text(
-                            "${post.fName} ${post.lName}",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        Row(
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data("${ApiClient.BASE_URL}/dp/${post.uname}")
+                                    .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                    .allowHardware(false)
+                                    .build(),
+                                contentDescription = "Profile picture",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                "${post.fName} ${post.lName}",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(post.content)

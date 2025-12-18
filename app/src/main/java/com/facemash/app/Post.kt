@@ -7,6 +7,7 @@ data class Comment(
 
 data class Post(
     val _id: String,
+    val uname: String,
     val fName: String,
     val lName: String,
     val content: String,
