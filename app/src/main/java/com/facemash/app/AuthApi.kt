@@ -5,6 +5,11 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import org.json.JSONArray
+import android.content.Context
+import android.net.Uri
+import okhttp3.MultipartBody
+import java.io.File
+import okhttp3.RequestBody.Companion.asRequestBody
 
 object AuthApi {
 
@@ -175,6 +180,39 @@ object AuthApi {
 
         ApiClient.client.newCall(request).execute().use { response ->
             return response.body?.string() ?: "Post failed"
+        }
+    }
+
+    fun createPostWithImage(
+        context: Context,
+        content: String,
+        imageUri: Uri
+    ): Boolean {
+
+        val inputStream = context.contentResolver.openInputStream(imageUri) ?: return false
+        val tempFile = File.createTempFile("upload", ".jpg", context.cacheDir)
+
+        tempFile.outputStream().use { output ->
+            inputStream.copyTo(output)
+        }
+
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("content", content)
+            .addFormDataPart(
+                "pic",
+                tempFile.name,
+                tempFile.asRequestBody("image/*".toMediaType())
+            )
+            .build()
+
+        val request = okhttp3.Request.Builder()
+            .url("${ApiClient.BASE_URL}/createPost")
+            .post(requestBody)
+            .build()
+
+        ApiClient.client.newCall(request).execute().use {
+            return it.isSuccessful
         }
     }
 

@@ -13,7 +13,9 @@ import kotlinx.coroutines.withContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
-
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 @Composable
 fun FeedScreen(
     currentUserName: String,
@@ -29,6 +31,15 @@ fun FeedScreen(
     val commentTexts = remember { mutableStateMapOf<String, String>() }
 
     val scope = rememberCoroutineScope()
+
+    val context = LocalContext.current
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        selectedImageUri = uri
+    }
 
     suspend fun loadFeed() {
         loading = true
@@ -74,18 +85,39 @@ fun FeedScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                enabled = newPost.isNotBlank(),
+                enabled = newPost.isNotBlank() || selectedImageUri != null,
                 onClick = {
                     scope.launch {
                         withContext(Dispatchers.IO) {
-                            AuthApi.createPost(newPost)
+                            if (selectedImageUri != null) {
+                                AuthApi.createPostWithImage(
+                                    context = context,
+                                    content = newPost,
+                                    imageUri = selectedImageUri!!
+                                )
+                            } else {
+                                AuthApi.createPost(newPost)
+                            }
                         }
+
                         newPost = ""
+                        selectedImageUri = null
                         loadFeed()
                     }
                 }
             ) {
                 Text("Post")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(onClick = { imagePicker.launch("image/*") }) {
+                Text(
+                    if (selectedImageUri == null)
+                        "Pick Image"
+                    else
+                        "Image Selected"
+                )
             }
         }
 
