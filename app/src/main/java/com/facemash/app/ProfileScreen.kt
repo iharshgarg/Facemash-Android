@@ -87,8 +87,12 @@ fun ProfileScreen(
                     ) {
 
                         // Post content
-                        Text(post.content)
+                        Text(
+                            post.content,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
 
+                        // Post image (if exists)
                         if (!post.image.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
 
@@ -104,6 +108,14 @@ fun ProfileScreen(
                                     .height(250.dp)
                             )
                         }
+
+                        // Post date
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            formatPostDate(post.createdAt),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
 
                         Spacer(modifier = Modifier.height(8.dp))
 

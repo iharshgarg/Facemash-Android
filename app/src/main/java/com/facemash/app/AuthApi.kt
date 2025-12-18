@@ -132,6 +132,7 @@ object AuthApi {
                         lName = obj.getString("lName"),
                         content = obj.getString("content"),
                         image = imageValue,
+                        createdAt = obj.getString("createdAt"),
                         comments = comments
                     )
                 )
@@ -255,7 +256,7 @@ object AuthApi {
                     )
                 }
 
-                val imageValue = if (p.has("image") && !p.isNull("image")) {
+                val imageValue = if (p.has("image") && !p.isNull("image") && p.getString("image").isNotBlank()) {
                     p.getString("image")
                 } else {
                     null
@@ -264,11 +265,12 @@ object AuthApi {
                 posts.add(
                     Post(
                         _id = p.getString("_id"),
-                        uname = obj.getString("uname"),
+                        uname = p.getString("uname"),          // ✅ REQUIRED
                         fName = p.getString("fName"),
                         lName = p.getString("lName"),
                         content = p.getString("content"),
-                        image = imageValue,
+                        image = imageValue,                    // ✅ SAFE
+                        createdAt = p.getString("createdAt"),  // ✅ REQUIRED
                         comments = comments
                     )
                 )

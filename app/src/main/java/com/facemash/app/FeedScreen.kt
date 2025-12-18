@@ -200,6 +200,14 @@ fun FeedScreen(
                             )
                         }
 
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            formatPostDate(post.createdAt),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
                         Spacer(modifier = Modifier.height(8.dp))
 
                         // Comments
