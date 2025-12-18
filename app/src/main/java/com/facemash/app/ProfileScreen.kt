@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 fun ProfileScreen(
     username: String,
     currentUserName: String,
+    currentUserFirstName: String,
     onBack: () -> Unit
 ) {
 
@@ -55,17 +56,13 @@ fun ProfileScreen(
     Column(modifier = Modifier.fillMaxSize()) {
 
         // Top bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Profile", style = MaterialTheme.typography.headlineSmall)
-            Button(onClick = onBack) {
-                Text("Back")
-            }
-        }
+        TopBar(
+            currentUserName = currentUserName,
+            currentUserFirstName = currentUserFirstName,
+            onHome = onBack,
+            onProfile = { /* already here */ },
+            onLogout = onBack
+        )
 
         if (loading) {
             Text("Loading profile...", modifier = Modifier.padding(16.dp))

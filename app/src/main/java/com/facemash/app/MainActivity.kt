@@ -26,6 +26,7 @@ class MainActivity : ComponentActivity() {
             var viewingProfile by remember { mutableStateOf<String?>(null) }
             var currentUsername by remember { mutableStateOf("") }
             var currentFullName by remember { mutableStateOf("") }
+            var currentUserFirstName by remember { mutableStateOf("") }
 
             val scope = rememberCoroutineScope()
 
@@ -46,6 +47,7 @@ class MainActivity : ComponentActivity() {
                     val lName = lNameRegex.find(sessionResult)?.groupValues?.get(1) ?: ""
 
                     currentFullName = "$fName $lName"
+                    currentUserFirstName = fName
 
                     val unameRegex = """"uname"\s*:\s*"([^"]+)"""".toRegex()
                     currentUsername = unameRegex.find(sessionResult)?.groupValues?.get(1) ?: ""
@@ -61,12 +63,14 @@ class MainActivity : ComponentActivity() {
                     if (viewingProfile != null) {
                         ProfileScreen(
                             username = viewingProfile!!,
-                            currentUserName = currentFullName,
+                            currentUserName = currentUsername,
+                            currentUserFirstName = currentUserFirstName,
                             onBack = { viewingProfile = null }
                         )
                     } else {
                         FeedScreen(
-                            currentUserName = currentFullName,
+                            currentUserName = currentUsername,          // uname → used for dp & api
+                            currentUserFirstName = currentUserFirstName, // fName → UI
                             onLogout = {
                                 ApiClient.clearCookies()
                                 isLoggedIn = false
@@ -100,6 +104,7 @@ class MainActivity : ComponentActivity() {
                                 val lName = lNameRegex.find(sessionData)?.groupValues?.get(1) ?: ""
 
                                 currentFullName = "$fName $lName"
+                                currentUserFirstName = fName
                             },
                             onSignup = {
                                 showSignup = true

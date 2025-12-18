@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 @Composable
 fun FeedScreen(
     currentUserName: String,
+    currentUserFirstName: String,
     onLogout: () -> Unit,
     onOpenProfile: () -> Unit
 ) {
@@ -61,19 +62,15 @@ fun FeedScreen(
     Column(modifier = Modifier.fillMaxSize()) {
 
         // Top bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            TextButton(onClick = onOpenProfile) {
-                Text("Facemash", style = MaterialTheme.typography.headlineSmall)
-            }
-            Button(onClick = onLogout) {
-                Text("Logout")
-            }
-        }
+        TopBar(
+            currentUserName = currentUserName,
+            currentUserFirstName = currentUserFirstName,
+            onHome = {
+                scope.launch { loadFeed() }
+            },
+            onProfile = onOpenProfile,
+            onLogout = onLogout
+        )
 
         // Create Post
         Column(modifier = Modifier.padding(16.dp)) {
