@@ -14,6 +14,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 
+
 @Composable
 fun ProfileScreen(
     username: String,
