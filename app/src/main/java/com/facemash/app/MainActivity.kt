@@ -80,7 +80,10 @@ class MainActivity : ComponentActivity() {
                                 username = viewingProfile!!,
                                 currentUserName = currentFullName,
                                 currentUserFirstName = currentUserFirstName,
-                                onBack = { viewingProfile = null }
+                                onBack = { viewingProfile = null },
+                                onSearch = {
+                                    showSearch = true
+                                }
                             )
                         }
 

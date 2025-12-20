@@ -21,7 +21,8 @@ fun ProfileScreen(
     username: String,
     currentUserName: String,
     currentUserFirstName: String,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onSearch: () -> Unit     // 🔑 ADD THIS
 ) {
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
@@ -52,7 +53,7 @@ fun ProfileScreen(
             currentUserFirstName = currentUserFirstName,
             onHome = onBack,
             onProfile = { /* already here */ },
-            onSearch = { /* search disabled on profile for now */ },
+            onSearch = onSearch,   // 🔑 ADD THIS
             onLogout = onBack
         )
 
