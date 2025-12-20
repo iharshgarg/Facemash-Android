@@ -279,4 +279,39 @@ object AuthApi {
             return Pair(fullName, posts)
         }
     }
+
+    suspend fun searchUsers(query: String): List<UserSearchResult> {
+        if (query.isBlank()) return emptyList()
+
+        val json = JSONObject()
+        json.put("query", query)
+
+        val requestBody = json.toString()
+            .toRequestBody("application/json".toMediaType())
+
+        val request = okhttp3.Request.Builder()
+            .url(ApiClient.BASE_URL + "/search")
+            .post(requestBody)
+            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+            .build()
+
+        val response = ApiClient.client.newCall(request).execute()
+        val body = response.body?.string() ?: return emptyList()
+
+        val jsonArray = JSONArray(body)
+        val results = mutableListOf<UserSearchResult>()
+
+        for (i in 0 until jsonArray.length()) {
+            val obj = jsonArray.getJSONObject(i)
+            results.add(
+                UserSearchResult(
+                    uname = obj.getString("uname"),
+                    fName = obj.getString("fName"),
+                    lName = obj.getString("lName")
+                )
+            )
+        }
+
+        return results
+    }
 }

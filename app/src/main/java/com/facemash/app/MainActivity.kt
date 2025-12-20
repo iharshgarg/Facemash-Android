@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
             var currentUsername by remember { mutableStateOf("") }
             var currentFullName by remember { mutableStateOf("") }
             var currentUserFirstName by remember { mutableStateOf("") }
+            var showSearch by remember { mutableStateOf(false) }
 
             val scope = rememberCoroutineScope()
 
@@ -60,26 +61,45 @@ class MainActivity : ComponentActivity() {
                     Text("Checking session...")
                 }
                 isLoggedIn -> {
-                    if (viewingProfile != null) {
-                        ProfileScreen(
-                            username = viewingProfile!!,
-                            currentUserName = currentUsername,
-                            currentUserFirstName = currentUserFirstName,
-                            onBack = { viewingProfile = null }
-                        )
-                    } else {
-                        FeedScreen(
-                            currentUserName = currentUsername,          // uname → used for dp & api
-                            currentUserFirstName = currentUserFirstName, // fName → UI
-                            onLogout = {
-                                ApiClient.clearCookies()
-                                isLoggedIn = false
-                                userInfo = ""
-                            },
-                            onOpenProfile = {
-                                viewingProfile = currentUsername
-                            }
-                        )
+
+                    when {
+                        showSearch -> {
+                            SearchScreen(
+                                onUserClick = { uname ->
+                                    showSearch = false
+                                    viewingProfile = uname
+                                },
+                                onBack = {
+                                    showSearch = false
+                                }
+                            )
+                        }
+
+                        viewingProfile != null -> {
+                            ProfileScreen(
+                                username = viewingProfile!!,
+                                currentUserName = currentFullName,
+                                currentUserFirstName = currentUserFirstName,
+                                onBack = { viewingProfile = null }
+                            )
+                        }
+
+                        else -> {
+                            FeedScreen(
+                                currentUserName = currentFullName,
+                                currentUserFirstName = currentUserFirstName,
+                                onLogout = {
+                                    ApiClient.clearCookies()
+                                    isLoggedIn = false
+                                },
+                                onOpenProfile = {
+                                    viewingProfile = currentUsername
+                                },
+                                onOpenSearch = {
+                                    showSearch = true
+                                }
+                            )
+                        }
                     }
                 }
                 else -> {

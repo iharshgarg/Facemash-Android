@@ -51,7 +51,8 @@ fun ProfileScreen(
             currentUserName = currentUserName,
             currentUserFirstName = currentUserFirstName,
             onHome = onBack,
-            onProfile = {},
+            onProfile = { /* already here */ },
+            onSearch = { /* search disabled on profile for now */ },
             onLogout = onBack
         )
 

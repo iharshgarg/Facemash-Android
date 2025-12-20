@@ -1,15 +1,21 @@
 package com.facemash.app
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
@@ -18,39 +24,68 @@ fun TopBar(
     currentUserFirstName: String,
     onHome: () -> Unit,
     onProfile: () -> Unit,
+    onSearch: () -> Unit,
     onLogout: () -> Unit
 ) {
     val context = LocalContext.current
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        // 🔵 Facemash (Home)
-        TextButton(
-            onClick = onHome,
-            modifier = Modifier.weight(1f)
+    Surface(shadowElevation = 4.dp) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                "Facemash",
-                style = MaterialTheme.typography.titleMedium
-            )
-        }
 
-        // 👤 Profile (DP + First Name)
-        TextButton(onClick = onProfile) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // 🔵 FACEMASH (NEVER BREAKS)
+            TextButton(
+                onClick = onHome,
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text(
+                    "facemash",
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
 
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // 🔍 FAKE SEARCH BAR (CORRECT WAY)
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(36.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .clickable { onSearch() }
+                    .padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Search users",
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(modifier = Modifier.width(6.dp))
+
+            // 👤 PROFILE (DP + FIRST NAME ONLY)
+            TextButton(
+                onClick = onProfile,
+                contentPadding = PaddingValues(horizontal = 4.dp)
+            ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
                         .data("${ApiClient.BASE_URL}/dp/$currentUserName")
                         .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
                         .allowHardware(false)
                         .build(),
-                    contentDescription = "Profile picture",
+                    contentDescription = "DP",
                     modifier = Modifier
                         .size(26.dp)
                         .clip(CircleShape)
@@ -60,19 +95,37 @@ fun TopBar(
 
                 Text(
                     currentUserFirstName,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
-        }
 
-        // 🏠 Home
-        TextButton(onClick = onHome) {
-            Text("Home", maxLines = 1)
-        }
+            // 🏠 HOME
+            TextButton(
+                onClick = onHome,
+                contentPadding = PaddingValues(horizontal = 4.dp)
+            ) {
+                Text(
+                    "Home",
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
 
-        // 🚪 Logout
-        TextButton(onClick = onLogout) {
-            Text("Logout", maxLines = 1)
+            // 🚪 LOGOUT
+            TextButton(
+                onClick = onLogout,
+                contentPadding = PaddingValues(horizontal = 4.dp)
+            ) {
+                Text(
+                    "Logout",
+                    maxLines = 1,
+                    overflow = TextOverflow.Clip,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }

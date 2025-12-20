@@ -24,8 +24,9 @@ fun FeedScreen(
     currentUserName: String,
     currentUserFirstName: String,
     onLogout: () -> Unit,
-    onOpenProfile: () -> Unit
-) {
+    onOpenProfile: () -> Unit,
+    onOpenSearch: () -> Unit
+){
     var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
     var newPost by remember { mutableStateOf("") }
@@ -59,6 +60,7 @@ fun FeedScreen(
             currentUserFirstName = currentUserFirstName,
             onHome = { scope.launch { loadFeed() } },
             onProfile = onOpenProfile,
+            onSearch = onOpenSearch,
             onLogout = onLogout
         )
 
