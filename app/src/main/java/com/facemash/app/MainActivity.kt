@@ -3,12 +3,12 @@ package com.facemash.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
 
 class MainActivity : ComponentActivity() {
 
@@ -19,127 +19,161 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+            var appStatus by remember { mutableStateOf<AppStatus>(AppStatus.Loading) }
+
             var showSignup by remember { mutableStateOf(false) }
             var isLoggedIn by remember { mutableStateOf(false) }
-            var userInfo by remember { mutableStateOf("") }
-            var checkingSession by remember { mutableStateOf(true) }
             var viewingProfile by remember { mutableStateOf<String?>(null) }
+            var showSearch by remember { mutableStateOf(false) }
+
             var currentUsername by remember { mutableStateOf("") }
             var currentFullName by remember { mutableStateOf("") }
             var currentUserFirstName by remember { mutableStateOf("") }
-            var showSearch by remember { mutableStateOf(false) }
 
-            val scope = rememberCoroutineScope()
-
-            // Auto-login check on app start
+            // 🔍 SAFE NETWORK + SERVER CHECK
             LaunchedEffect(Unit) {
+
+                val hasInternet = NetworkChecker.hasInternet()
+                if (!hasInternet) {
+                    appStatus = AppStatus.NoInternet
+                    return@LaunchedEffect
+                }
+
+                val serverUp = NetworkChecker.isServerUp()
+                if (!serverUp) {
+                    appStatus = AppStatus.ServerDown
+                    return@LaunchedEffect
+                }
+
                 val sessionResult = withContext(Dispatchers.IO) {
                     AuthApi.checkSession()
                 }
 
                 if (sessionResult.contains("uname")) {
                     isLoggedIn = true
-                    userInfo = sessionResult
 
-                    val fNameRegex = """"fName"\s*:\s*"([^"]+)"""".toRegex()
-                    val lNameRegex = """"lName"\s*:\s*"([^"]+)"""".toRegex()
+                    val fName =
+                        """"fName"\s*:\s*"([^"]+)"""".toRegex()
+                            .find(sessionResult)?.groupValues?.get(1) ?: ""
 
-                    val fName = fNameRegex.find(sessionResult)?.groupValues?.get(1) ?: ""
-                    val lName = lNameRegex.find(sessionResult)?.groupValues?.get(1) ?: ""
+                    val lName =
+                        """"lName"\s*:\s*"([^"]+)"""".toRegex()
+                            .find(sessionResult)?.groupValues?.get(1) ?: ""
 
-                    currentFullName = "$fName $lName"
                     currentUserFirstName = fName
+                    currentFullName = "$fName $lName"
 
-                    val unameRegex = """"uname"\s*:\s*"([^"]+)"""".toRegex()
-                    currentUsername = unameRegex.find(sessionResult)?.groupValues?.get(1) ?: ""
+                    currentUsername =
+                        """"uname"\s*:\s*"([^"]+)"""".toRegex()
+                            .find(sessionResult)?.groupValues?.get(1) ?: ""
                 }
-                checkingSession = false
+
+                appStatus = AppStatus.Online
             }
 
-            when {
-                checkingSession -> {
-                    Text("Checking session...")
+            // 🧠 UI STATE MACHINE
+            when (appStatus) {
+
+                AppStatus.Loading -> {
+                    CenterText("Checking connectivity…")
                 }
-                isLoggedIn -> {
 
-                    when {
-                        showSearch -> {
-                            SearchScreen(
-                                onUserClick = { uname ->
-                                    showSearch = false
-                                    viewingProfile = uname
-                                },
-                                onBack = {
-                                    showSearch = false
-                                }
-                            )
-                        }
-
-                        viewingProfile != null -> {
-                            ProfileScreen(
-                                username = viewingProfile!!,
-                                currentUserName = currentFullName,
-                                currentUserFirstName = currentUserFirstName,
-                                onBack = { viewingProfile = null },
-                                onSearch = {
-                                    showSearch = true
-                                },
-                                onOpenMyProfile = {
-                                    viewingProfile = currentUsername   // 🔑 FORCE SWITCH
-                                    showSearch = false
-                                }
-                            )
-                        }
-
-                        else -> {
-                            FeedScreen(
-                                currentUserName = currentFullName,
-                                currentUserFirstName = currentUserFirstName,
-                                onLogout = {
-                                    ApiClient.clearCookies()
-                                    isLoggedIn = false
-                                },
-                                onOpenProfile = {
-                                    viewingProfile = currentUsername
-                                },
-                                onOpenSearch = {
-                                    showSearch = true
-                                }
-                            )
-                        }
-                    }
+                AppStatus.NoInternet -> {
+                    CenterText("You are not connected to internet!")
                 }
-                else -> {
-                    if (showSignup) {
-                        SignupScreen {
-                            showSignup = false
+
+                AppStatus.ServerDown -> {
+                    CenterText("Facemash server is booting up, please wait…")
+                }
+
+                AppStatus.Online -> {
+
+                    if (!isLoggedIn) {
+
+                        if (showSignup) {
+                            SignupScreen { showSignup = false }
+                        } else {
+                            LoginScreen(
+                                onLoginSuccess = { sessionData ->
+                                    isLoggedIn = true
+
+                                    val fName =
+                                        """"fName"\s*:\s*"([^"]+)"""".toRegex()
+                                            .find(sessionData)?.groupValues?.get(1) ?: ""
+
+                                    val lName =
+                                        """"lName"\s*:\s*"([^"]+)"""".toRegex()
+                                            .find(sessionData)?.groupValues?.get(1) ?: ""
+
+                                    currentUserFirstName = fName
+                                    currentFullName = "$fName $lName"
+
+                                    currentUsername =
+                                        """"uname"\s*:\s*"([^"]+)"""".toRegex()
+                                            .find(sessionData)?.groupValues?.get(1) ?: ""
+                                },
+                                onSignup = { showSignup = true }
+                            )
                         }
+
                     } else {
-                        LoginScreen(
-                            onLoginSuccess = { sessionData ->
-                                isLoggedIn = true
-                                userInfo = sessionData
 
-                                // extract username safely
-                                val unameRegex = """"uname"\s*:\s*"([^"]+)"""".toRegex()
-                                currentUsername = unameRegex.find(sessionData)?.groupValues?.get(1) ?: ""
-
-                                val fNameRegex = """"fName"\s*:\s*"([^"]+)"""".toRegex()
-                                val lNameRegex = """"lName"\s*:\s*"([^"]+)"""".toRegex()
-
-                                val fName = fNameRegex.find(sessionData)?.groupValues?.get(1) ?: ""
-                                val lName = lNameRegex.find(sessionData)?.groupValues?.get(1) ?: ""
-
-                                currentFullName = "$fName $lName"
-                                currentUserFirstName = fName
-                            },
-                            onSignup = {
-                                showSignup = true
+                        when {
+                            showSearch -> {
+                                SearchScreen(
+                                    onUserClick = {
+                                        showSearch = false
+                                        viewingProfile = it
+                                    },
+                                    onBack = { showSearch = false }
+                                )
                             }
-                        )
+
+                            viewingProfile != null -> {
+                                ProfileScreen(
+                                    username = viewingProfile!!,
+                                    currentUserName = currentFullName,
+                                    currentUserFirstName = currentUserFirstName,
+                                    onBack = { viewingProfile = null },
+                                    onSearch = { showSearch = true },
+                                    onOpenMyProfile = {
+                                        viewingProfile = currentUsername
+                                        showSearch = false
+                                    }
+                                )
+                            }
+
+                            else -> {
+                                FeedScreen(
+                                    currentUserName = currentFullName,
+                                    currentUserFirstName = currentUserFirstName,
+                                    onLogout = {
+                                        ApiClient.clearCookies()
+                                        isLoggedIn = false
+                                    },
+                                    onOpenProfile = {
+                                        viewingProfile = currentUsername
+                                    },
+                                    onOpenSearch = {
+                                        showSearch = true
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun CenterText(text: String) {
+    Surface {
+        Box(
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text)
         }
     }
 }
