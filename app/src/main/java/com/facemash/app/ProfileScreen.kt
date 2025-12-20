@@ -3,30 +3,33 @@ package com.facemash.app
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
 
 @Composable
 fun ProfileScreen(
-    username: String,
-    currentUserName: String,
-    currentUserFirstName: String,
+    username: String,                 // 👤 profile being viewed
+    currentUsername: String,          // 👤 logged-in uname
+    currentUserFirstName: String,     // 👤 logged-in first name
+    currentUserFullName: String,      // 👤 logged-in full name
     onBack: () -> Unit,
     onSearch: () -> Unit,
-    onOpenMyProfile: () -> Unit   // 🔑 ADD THIS
-){
+    onOpenMyProfile: () -> Unit
+) {
+
     val context = LocalContext.current
-    var name by remember { mutableStateOf("") }
+
+    var displayName by remember { mutableStateOf("") }
     var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
 
@@ -36,50 +39,68 @@ fun ProfileScreen(
     suspend fun loadProfile() {
         loading = true
         try {
-            val result = withContext(Dispatchers.IO) { AuthApi.fetchProfile(username) }
-            name = result.first
+            val result = withContext(Dispatchers.IO) {
+                AuthApi.fetchProfile(username)
+            }
+            displayName = result.first
             posts = result.second
         } finally {
             loading = false
         }
     }
 
-    LaunchedEffect(username) { loadProfile() }
+    LaunchedEffect(username) {
+        loadProfile()
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
 
         // 🔒 FIXED TOP BAR
         TopBar(
-            currentUserName = currentUserName,
+            currentUsername = currentUsername,
             currentUserFirstName = currentUserFirstName,
             onHome = onBack,
-            onProfile = onOpenMyProfile,
-            onSearch = onSearch,   // 🔑 ADD THIS
+            onProfile = onOpenMyProfile,   // 🔑 ALWAYS GO TO MY PROFILE
+            onSearch = onSearch,
             onLogout = onBack
         )
 
-        // 🔽 EVERYTHING ELSE SCROLLS
+        // 🔽 EVERYTHING BELOW SCROLLS
         LazyColumn(modifier = Modifier.fillMaxSize()) {
 
+            // 👤 PROFILE HEADER
             item {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(name, style = MaterialTheme.typography.titleLarge)
-                    Text("@$username", color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        displayName,
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(
+                        "@$username",
+                        color = MaterialTheme.colorScheme.primary
+                    )
                     Divider(modifier = Modifier.padding(vertical = 12.dp))
                 }
             }
 
+            // ⏳ LOADING
             if (loading) {
                 item {
-                    Text("Loading profile...", modifier = Modifier.padding(16.dp))
+                    Text(
+                        "Loading profile...",
+                        modifier = Modifier.padding(16.dp)
+                    )
                 }
             }
 
+            // 📰 POSTS
             items(posts, key = { it._id }) { post ->
+
                 val commentText = commentTexts[post._id] ?: ""
 
                 Column(modifier = Modifier.padding(16.dp)) {
 
+                    // 🔹 HEADER (DP + NAME)
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         AsyncImage(
                             model = ImageRequest.Builder(context)
@@ -88,15 +109,23 @@ fun ProfileScreen(
                                 .allowHardware(false)
                                 .build(),
                             contentDescription = null,
-                            modifier = Modifier.size(40.dp).clip(CircleShape)
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
                         )
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("${post.fName} ${post.lName}", style = MaterialTheme.typography.titleMedium)
+
+                        Text(
+                            "${post.fName} ${post.lName}",
+                            style = MaterialTheme.typography.titleMedium
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(post.content)
 
+                    // 🖼 POST IMAGE
                     if (!post.image.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         AsyncImage(
@@ -106,11 +135,15 @@ fun ProfileScreen(
                                 .allowHardware(false)
                                 .build(),
                             contentDescription = null,
-                            modifier = Modifier.fillMaxWidth().height(250.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(250.dp)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
+
+                    // 🕒 DATE
                     Text(
                         formatPostDate(post.createdAt),
                         style = MaterialTheme.typography.bodySmall,
@@ -118,11 +151,18 @@ fun ProfileScreen(
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
+
+                    // 💬 COMMENTS
                     post.comments.forEach {
-                        Text("${it.commenter}: ${it.commentContent}", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            "${it.commenter}: ${it.commentContent}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
+
+                    // ➕ ADD COMMENT
                     OutlinedTextField(
                         value = commentText,
                         onValueChange = { commentTexts[post._id] = it },
@@ -136,9 +176,9 @@ fun ProfileScreen(
                             scope.launch {
                                 withContext(Dispatchers.IO) {
                                     AuthApi.addComment(
-                                        post._id,
-                                        currentUserName,
-                                        commentText
+                                        postId = post._id,
+                                        commenter = currentUserFullName, // ✅ FULL NAME
+                                        commentContent = commentText
                                     )
                                 }
                                 commentTexts[post._id] = ""

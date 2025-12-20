@@ -19,59 +19,74 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+            /* -------------------- GLOBAL APP STATE -------------------- */
+
             var appStatus by remember { mutableStateOf<AppStatus>(AppStatus.Loading) }
 
-            var showSignup by remember { mutableStateOf(false) }
             var isLoggedIn by remember { mutableStateOf(false) }
-            var viewingProfile by remember { mutableStateOf<String?>(null) }
+            var showSignup by remember { mutableStateOf(false) }
             var showSearch by remember { mutableStateOf(false) }
+            var viewingProfile by remember { mutableStateOf<String?>(null) }
 
             var currentUsername by remember { mutableStateOf("") }
-            var currentFullName by remember { mutableStateOf("") }
             var currentUserFirstName by remember { mutableStateOf("") }
+            var currentUserFullName by remember { mutableStateOf("") }
 
-            // 🔍 SAFE NETWORK + SERVER CHECK
+            /* -------------------- STARTUP CHECK -------------------- */
+
             LaunchedEffect(Unit) {
+                try {
+                    // 1️⃣ Internet check (IO THREAD)
+                    val hasInternet = withContext(Dispatchers.IO) {
+                        NetworkChecker.hasInternet()
+                    }
+                    if (!hasInternet) {
+                        appStatus = AppStatus.NoInternet
+                        return@LaunchedEffect
+                    }
 
-                val hasInternet = NetworkChecker.hasInternet()
-                if (!hasInternet) {
-                    appStatus = AppStatus.NoInternet
-                    return@LaunchedEffect
-                }
+                    // 2️⃣ Server heartbeat (IO THREAD)
+                    val serverUp = withContext(Dispatchers.IO) {
+                        NetworkChecker.isServerUp()
+                    }
+                    if (!serverUp) {
+                        appStatus = AppStatus.ServerDown
+                        return@LaunchedEffect
+                    }
 
-                val serverUp = NetworkChecker.isServerUp()
-                if (!serverUp) {
+                    // 3️⃣ Session check (IO THREAD)
+                    val sessionResult = withContext(Dispatchers.IO) {
+                        AuthApi.checkSession()
+                    }
+
+                    if (sessionResult.contains("uname")) {
+                        isLoggedIn = true
+
+                        currentUsername =
+                            """"uname"\s*:\s*"([^"]+)"""".toRegex()
+                                .find(sessionResult)?.groupValues?.get(1) ?: ""
+
+                        val fName =
+                            """"fName"\s*:\s*"([^"]+)"""".toRegex()
+                                .find(sessionResult)?.groupValues?.get(1) ?: ""
+
+                        val lName =
+                            """"lName"\s*:\s*"([^"]+)"""".toRegex()
+                                .find(sessionResult)?.groupValues?.get(1) ?: ""
+
+                        currentUserFirstName = fName
+                        currentUserFullName = "$fName $lName"
+                    }
+
+                    appStatus = AppStatus.Online
+
+                } catch (e: Exception) {
                     appStatus = AppStatus.ServerDown
-                    return@LaunchedEffect
                 }
-
-                val sessionResult = withContext(Dispatchers.IO) {
-                    AuthApi.checkSession()
-                }
-
-                if (sessionResult.contains("uname")) {
-                    isLoggedIn = true
-
-                    val fName =
-                        """"fName"\s*:\s*"([^"]+)"""".toRegex()
-                            .find(sessionResult)?.groupValues?.get(1) ?: ""
-
-                    val lName =
-                        """"lName"\s*:\s*"([^"]+)"""".toRegex()
-                            .find(sessionResult)?.groupValues?.get(1) ?: ""
-
-                    currentUserFirstName = fName
-                    currentFullName = "$fName $lName"
-
-                    currentUsername =
-                        """"uname"\s*:\s*"([^"]+)"""".toRegex()
-                            .find(sessionResult)?.groupValues?.get(1) ?: ""
-                }
-
-                appStatus = AppStatus.Online
             }
 
-            // 🧠 UI STATE MACHINE
+            /* -------------------- UI STATE MACHINE -------------------- */
+
             when (appStatus) {
 
                 AppStatus.Loading -> {
@@ -91,11 +106,17 @@ class MainActivity : ComponentActivity() {
                     if (!isLoggedIn) {
 
                         if (showSignup) {
-                            SignupScreen { showSignup = false }
+                            SignupScreen {
+                                showSignup = false
+                            }
                         } else {
                             LoginScreen(
                                 onLoginSuccess = { sessionData ->
                                     isLoggedIn = true
+
+                                    currentUsername =
+                                        """"uname"\s*:\s*"([^"]+)"""".toRegex()
+                                            .find(sessionData)?.groupValues?.get(1) ?: ""
 
                                     val fName =
                                         """"fName"\s*:\s*"([^"]+)"""".toRegex()
@@ -106,11 +127,7 @@ class MainActivity : ComponentActivity() {
                                             .find(sessionData)?.groupValues?.get(1) ?: ""
 
                                     currentUserFirstName = fName
-                                    currentFullName = "$fName $lName"
-
-                                    currentUsername =
-                                        """"uname"\s*:\s*"([^"]+)"""".toRegex()
-                                            .find(sessionData)?.groupValues?.get(1) ?: ""
+                                    currentUserFullName = "$fName $lName"
                                 },
                                 onSignup = { showSignup = true }
                             )
@@ -121,9 +138,9 @@ class MainActivity : ComponentActivity() {
                         when {
                             showSearch -> {
                                 SearchScreen(
-                                    onUserClick = {
+                                    onUserClick = { uname ->
                                         showSearch = false
-                                        viewingProfile = it
+                                        viewingProfile = uname
                                     },
                                     onBack = { showSearch = false }
                                 )
@@ -132,8 +149,9 @@ class MainActivity : ComponentActivity() {
                             viewingProfile != null -> {
                                 ProfileScreen(
                                     username = viewingProfile!!,
-                                    currentUserName = currentFullName,
+                                    currentUsername = currentUsername,
                                     currentUserFirstName = currentUserFirstName,
+                                    currentUserFullName = currentUserFullName,
                                     onBack = { viewingProfile = null },
                                     onSearch = { showSearch = true },
                                     onOpenMyProfile = {
@@ -145,8 +163,9 @@ class MainActivity : ComponentActivity() {
 
                             else -> {
                                 FeedScreen(
-                                    currentUserName = currentFullName,
+                                    currentUsername = currentUsername,
                                     currentUserFirstName = currentUserFirstName,
+                                    currentUserFullName = currentUserFullName,
                                     onLogout = {
                                         ApiClient.clearCookies()
                                         isLoggedIn = false
@@ -166,6 +185,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+/* -------------------- HELPERS -------------------- */
 
 @Composable
 private fun CenterText(text: String) {

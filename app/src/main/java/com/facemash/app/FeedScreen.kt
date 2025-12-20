@@ -1,32 +1,34 @@
 package com.facemash.app
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
 
 @Composable
 fun FeedScreen(
-    currentUserName: String,
-    currentUserFirstName: String,
+    currentUsername: String,          // ✅ uname (lion)
+    currentUserFirstName: String,     // ✅ John
+    currentUserFullName: String,      // ✅ John Leawes
     onLogout: () -> Unit,
     onOpenProfile: () -> Unit,
     onOpenSearch: () -> Unit
-){
+) {
+
     var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
     var newPost by remember { mutableStateOf("") }
@@ -44,7 +46,9 @@ fun FeedScreen(
     suspend fun loadFeed() {
         loading = true
         try {
-            posts = withContext(Dispatchers.IO) { AuthApi.fetchFeed() }
+            posts = withContext(Dispatchers.IO) {
+                AuthApi.fetchFeed()
+            }
         } finally {
             loading = false
         }
@@ -56,7 +60,7 @@ fun FeedScreen(
 
         // 🔒 FIXED TOP BAR
         TopBar(
-            currentUserName = currentUserName,
+            currentUsername = currentUsername,
             currentUserFirstName = currentUserFirstName,
             onHome = { scope.launch { loadFeed() } },
             onProfile = onOpenProfile,
@@ -82,7 +86,12 @@ fun FeedScreen(
 
                     Row {
                         Button(onClick = { imagePicker.launch("image/*") }) {
-                            Text(if (selectedImageUri == null) "Upload Photo" else "Photo Selected")
+                            Text(
+                                if (selectedImageUri == null)
+                                    "Upload Photo"
+                                else
+                                    "Photo Selected"
+                            )
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -94,14 +103,15 @@ fun FeedScreen(
                                     withContext(Dispatchers.IO) {
                                         if (selectedImageUri != null) {
                                             AuthApi.createPostWithImage(
-                                                context,
-                                                newPost,
-                                                selectedImageUri!!
+                                                context = context,
+                                                content = newPost,
+                                                imageUri = selectedImageUri!!
                                             )
                                         } else {
                                             AuthApi.createPost(newPost)
                                         }
                                     }
+
                                     newPost = ""
                                     selectedImageUri = null
                                     loadFeed()
@@ -125,10 +135,12 @@ fun FeedScreen(
 
             // 📰 POSTS
             items(posts, key = { it._id }) { post ->
+
                 val commentText = commentTexts[post._id] ?: ""
 
                 Column(modifier = Modifier.padding(16.dp)) {
 
+                    // 🔹 HEADER (DP + NAME)
                     Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                         AsyncImage(
                             model = ImageRequest.Builder(context)
@@ -137,15 +149,23 @@ fun FeedScreen(
                                 .allowHardware(false)
                                 .build(),
                             contentDescription = null,
-                            modifier = Modifier.size(40.dp).clip(CircleShape)
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
                         )
+
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("${post.fName} ${post.lName}", style = MaterialTheme.typography.titleMedium)
+
+                        Text(
+                            "${post.fName} ${post.lName}",
+                            style = MaterialTheme.typography.titleMedium
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(post.content)
 
+                    // 🖼 IMAGE
                     if (!post.image.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         AsyncImage(
@@ -155,11 +175,15 @@ fun FeedScreen(
                                 .allowHardware(false)
                                 .build(),
                             contentDescription = null,
-                            modifier = Modifier.fillMaxWidth().height(250.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(250.dp)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
+
+                    // 🕒 DATE
                     Text(
                         formatPostDate(post.createdAt),
                         style = MaterialTheme.typography.bodySmall,
@@ -167,11 +191,18 @@ fun FeedScreen(
                     )
 
                     Spacer(modifier = Modifier.height(8.dp))
+
+                    // 💬 COMMENTS
                     post.comments.forEach {
-                        Text("${it.commenter}: ${it.commentContent}", style = MaterialTheme.typography.bodySmall)
+                        Text(
+                            "${it.commenter}: ${it.commentContent}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
+
+                    // ➕ ADD COMMENT
                     OutlinedTextField(
                         value = commentText,
                         onValueChange = { commentTexts[post._id] = it },
@@ -185,9 +216,9 @@ fun FeedScreen(
                             scope.launch {
                                 withContext(Dispatchers.IO) {
                                     AuthApi.addComment(
-                                        post._id,
-                                        currentUserName,
-                                        commentText
+                                        postId = post._id,
+                                        commenter = currentUserFullName, // ✅ FULL NAME
+                                        commentContent = commentText
                                     )
                                 }
                                 commentTexts[post._id] = ""

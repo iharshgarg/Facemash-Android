@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,8 +19,8 @@ import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun TopBar(
-    currentUserName: String,
-    currentUserFirstName: String,
+    currentUsername: String,          // ✅ uname (lion)
+    currentUserFirstName: String,     // ✅ John
     onHome: () -> Unit,
     onProfile: () -> Unit,
     onSearch: () -> Unit,
@@ -52,7 +51,7 @@ fun TopBar(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // 🔍 FAKE SEARCH BAR (CORRECT WAY)
+            // 🔍 SEARCH BAR (CLICKABLE)
             Row(
                 modifier = Modifier
                     .weight(1f)
@@ -74,18 +73,18 @@ fun TopBar(
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            // 👤 PROFILE (DP + FIRST NAME ONLY)
+            // 👤 MY PROFILE (DP + FIRST NAME)
             TextButton(
                 onClick = onProfile,
                 contentPadding = PaddingValues(horizontal = 4.dp)
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
-                        .data("${ApiClient.BASE_URL}/dp/$currentUserName")
+                        .data("${ApiClient.BASE_URL}/dp/$currentUsername") // ✅ FIXED
                         .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
                         .allowHardware(false)
                         .build(),
-                    contentDescription = "DP",
+                    contentDescription = "Profile picture",
                     modifier = Modifier
                         .size(26.dp)
                         .clip(CircleShape)
