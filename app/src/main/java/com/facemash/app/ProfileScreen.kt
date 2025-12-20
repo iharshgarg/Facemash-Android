@@ -22,8 +22,9 @@ fun ProfileScreen(
     currentUserName: String,
     currentUserFirstName: String,
     onBack: () -> Unit,
-    onSearch: () -> Unit     // 🔑 ADD THIS
-) {
+    onSearch: () -> Unit,
+    onOpenMyProfile: () -> Unit   // 🔑 ADD THIS
+){
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
@@ -52,7 +53,7 @@ fun ProfileScreen(
             currentUserName = currentUserName,
             currentUserFirstName = currentUserFirstName,
             onHome = onBack,
-            onProfile = { /* already here */ },
+            onProfile = onOpenMyProfile,
             onSearch = onSearch,   // 🔑 ADD THIS
             onLogout = onBack
         )

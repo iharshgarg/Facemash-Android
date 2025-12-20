@@ -83,6 +83,10 @@ class MainActivity : ComponentActivity() {
                                 onBack = { viewingProfile = null },
                                 onSearch = {
                                     showSearch = true
+                                },
+                                onOpenMyProfile = {
+                                    viewingProfile = currentUsername   // 🔑 FORCE SWITCH
+                                    showSearch = false
                                 }
                             )
                         }
