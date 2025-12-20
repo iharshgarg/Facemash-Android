@@ -157,6 +157,12 @@ class MainActivity : ComponentActivity() {
                                     onOpenMyProfile = {
                                         viewingProfile = currentUsername
                                         showSearch = false
+                                    },
+                                    onLogout = {
+                                        ApiClient.clearCookies()
+                                        isLoggedIn = false
+                                        viewingProfile = null
+                                        showSearch = false
                                     }
                                 )
                             }

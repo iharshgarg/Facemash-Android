@@ -24,7 +24,8 @@ fun ProfileScreen(
     currentUserFullName: String,      // 👤 logged-in full name
     onBack: () -> Unit,
     onSearch: () -> Unit,
-    onOpenMyProfile: () -> Unit
+    onOpenMyProfile: () -> Unit,
+    onLogout: () -> Unit
 ) {
 
     val context = LocalContext.current
@@ -62,7 +63,7 @@ fun ProfileScreen(
             onHome = onBack,
             onProfile = onOpenMyProfile,   // 🔑 ALWAYS GO TO MY PROFILE
             onSearch = onSearch,
-            onLogout = onBack
+            onLogout = onLogout
         )
 
         // 🔽 EVERYTHING BELOW SCROLLS
