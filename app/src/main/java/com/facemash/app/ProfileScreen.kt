@@ -15,6 +15,7 @@ import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun ProfileScreen(
@@ -110,6 +111,7 @@ fun ProfileScreen(
                                 .allowHardware(false)
                                 .build(),
                             contentDescription = null,
+                            contentScale = ContentScale.Crop,   // 🔑 FIX
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)

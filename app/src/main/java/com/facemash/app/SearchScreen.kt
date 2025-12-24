@@ -16,7 +16,9 @@ import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
 @Composable
 fun SearchScreen(
     onUserClick: (String) -> Unit,
@@ -101,7 +103,10 @@ fun SearchScreen(
                                     .allowHardware(false)
                                     .build(),
                                 contentDescription = null,
-                                modifier = Modifier.size(40.dp)
+                                contentScale = ContentScale.Crop,   // 🔑 FIX
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
                             )
 
                             Spacer(modifier = Modifier.width(12.dp))

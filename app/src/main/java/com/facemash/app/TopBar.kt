@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun TopBar(
@@ -80,11 +81,12 @@ fun TopBar(
             ) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
-                        .data("${ApiClient.BASE_URL}/dp/$currentUsername") // ✅ FIXED
+                        .data("${ApiClient.BASE_URL}/dp/$currentUsername")
                         .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
                         .allowHardware(false)
                         .build(),
-                    contentDescription = "Profile picture",
+                    contentDescription = "DP",
+                    contentScale = ContentScale.Crop,   // 🔑 FIX
                     modifier = Modifier
                         .size(26.dp)
                         .clip(CircleShape)
