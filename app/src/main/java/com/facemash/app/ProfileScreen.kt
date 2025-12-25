@@ -19,10 +19,10 @@ import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun ProfileScreen(
-    username: String,                 // 👤 profile being viewed
-    currentUsername: String,          // 👤 logged-in uname
-    currentUserFirstName: String,     // 👤 logged-in first name
-    currentUserFullName: String,      // 👤 logged-in full name
+    username: String,                 // profile being viewed
+    currentUsername: String,          // logged-in username
+    currentUserFirstName: String,     // logged-in first name
+    currentUserFullName: String,      // logged-in full name
     onBack: () -> Unit,
     onSearch: () -> Unit,
     onOpenMyProfile: () -> Unit,
@@ -62,7 +62,7 @@ fun ProfileScreen(
             currentUsername = currentUsername,
             currentUserFirstName = currentUserFirstName,
             onHome = onBack,
-            onProfile = onOpenMyProfile,   // 🔑 ALWAYS GO TO MY PROFILE
+            onProfile = onOpenMyProfile,
             onSearch = onSearch,
             onLogout = onLogout
         )
@@ -70,18 +70,42 @@ fun ProfileScreen(
         // 🔽 EVERYTHING BELOW SCROLLS
         LazyColumn(modifier = Modifier.fillMaxSize()) {
 
-            // 👤 PROFILE HEADER
+            // 👤 PROFILE HEADER (DP + NAME)
             item {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp, bottom = 12.dp),
+                    horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                ) {
+
+                    // 🧑 PROFILE DP (LARGE)
+                    AsyncImage(
+                        model = ImageRequest.Builder(context)
+                            .data("${ApiClient.BASE_URL}/dp/$username")
+                            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                            .allowHardware(false)
+                            .build(),
+                        contentDescription = "Profile Picture",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Text(
                         displayName,
                         style = MaterialTheme.typography.titleLarge
                     )
+
                     Text(
                         "@$username",
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Divider(modifier = Modifier.padding(vertical = 12.dp))
+
+                    Divider(modifier = Modifier.padding(top = 16.dp))
                 }
             }
 
@@ -102,8 +126,10 @@ fun ProfileScreen(
 
                 Column(modifier = Modifier.padding(16.dp)) {
 
-                    // 🔹 HEADER (DP + NAME)
-                    Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    // 🔹 POST HEADER (DP + NAME)
+                    Row(
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
                         AsyncImage(
                             model = ImageRequest.Builder(context)
                                 .data("${ApiClient.BASE_URL}/dp/${post.uname}")
@@ -111,7 +137,7 @@ fun ProfileScreen(
                                 .allowHardware(false)
                                 .build(),
                             contentDescription = null,
-                            contentScale = ContentScale.Crop,   // 🔑 FIX
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
@@ -180,7 +206,7 @@ fun ProfileScreen(
                                 withContext(Dispatchers.IO) {
                                     AuthApi.addComment(
                                         postId = post._id,
-                                        commenter = currentUserFullName, // ✅ FULL NAME
+                                        commenter = currentUserFullName,
                                         commentContent = commentText
                                     )
                                 }
