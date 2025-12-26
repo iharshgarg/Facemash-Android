@@ -17,6 +17,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Alignment
 
 @Composable
 fun ProfileScreen(
@@ -155,16 +159,37 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         friends.forEach { friendUname ->
-                            Text(
-                                text = "@$friendUname",
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier
                                     .padding(vertical = 4.dp)
                                     .clickable {
-                                        onOpenProfile(friendUname)   // 🔑 OPEN FRIEND PROFILE
-                                    },
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                                        onOpenProfile(friendUname)   // ✅ OPEN FRIEND PROFILE
+                                    }
+                            ) {
+
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data("${ApiClient.BASE_URL}/dp/$friendUname")
+                                        .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                        .allowHardware(false)
+                                        .build(),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(CircleShape)
+                                )
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Text(
+                                    text = "@$friendUname",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
                         }
                     }
 
