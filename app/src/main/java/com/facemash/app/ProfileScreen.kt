@@ -158,13 +158,17 @@ fun ProfileScreen(
                                 .fillMaxWidth()
                                 .clickable { friendsExpanded = !friendsExpanded }
                                 .padding(vertical = 8.dp),
-                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
                         ) {
 
                             Text(
-                                text = if (friendsExpanded) "▼ Friends (${friends.size})"
-                                else "▶ Friends (${friends.size})",
-                                style = MaterialTheme.typography.titleMedium
+                                text = if (friendsExpanded)
+                                    "▼ Friends (${friends.size})"
+                                else
+                                    "▶ Friends (${friends.size})",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
 
