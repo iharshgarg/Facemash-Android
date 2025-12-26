@@ -37,6 +37,7 @@ fun ProfileScreen(
 
     var dobString by remember { mutableStateOf<String?>(null) }
     var age by remember { mutableStateOf<Int?>(null) }
+    var sex by remember { mutableStateOf<String?>(null) }
 
     val commentTexts = remember { mutableStateMapOf<String, String>() }
     val scope = rememberCoroutineScope()
@@ -50,6 +51,7 @@ fun ProfileScreen(
 
             displayName = profile.fullName
             dobString = profile.dob
+            sex = profile.sex
             posts = profile.posts
 
             age = calculateAgeSafe(dobString)
@@ -103,8 +105,21 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    val pronoun = when (sex) {
+                        "Male" -> "he"
+                        "Female" -> "she"
+                        else -> null
+                    }
+
+                    val metaText = when {
+                        age != null && pronoun != null -> "$age, $pronoun"
+                        age != null -> "$age"
+                        pronoun != null -> pronoun
+                        else -> null
+                    }
+
                     Text(
-                        if (age != null) "$displayName ($age)" else displayName,
+                        if (metaText != null) "$displayName ($metaText)" else displayName,
                         style = MaterialTheme.typography.titleLarge
                     )
 
