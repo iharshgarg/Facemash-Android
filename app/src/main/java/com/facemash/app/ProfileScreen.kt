@@ -46,6 +46,7 @@ fun ProfileScreen(
     var sex by remember { mutableStateOf<String?>(null) }
     var contact by remember { mutableStateOf<String?>(null) }
     var friends by remember { mutableStateOf<List<String>>(emptyList()) }
+    var friendsExpanded by remember { mutableStateOf(false) }
 
     val commentTexts = remember { mutableStateMapOf<String, String>() }
     val scope = rememberCoroutineScope()
@@ -151,44 +152,60 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        Text(
-                            "Friends (${friends.size})",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                        // 🔽 FRIENDS HEADER (CLICKABLE)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { friendsExpanded = !friendsExpanded }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = if (friendsExpanded) "▼ Friends (${friends.size})"
+                                else "▶ Friends (${friends.size})",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
 
-                        friends.forEach { friendUname ->
+                        // 👥 FRIEND LIST (ONLY WHEN EXPANDED)
+                        if (friendsExpanded) {
 
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .padding(vertical = 4.dp)
-                                    .clickable {
-                                        onOpenProfile(friendUname)   // ✅ OPEN FRIEND PROFILE
-                                    }
-                            ) {
+                            Spacer(modifier = Modifier.height(4.dp))
 
-                                AsyncImage(
-                                    model = ImageRequest.Builder(context)
-                                        .data("${ApiClient.BASE_URL}/dp/$friendUname")
-                                        .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
-                                        .allowHardware(false)
-                                        .build(),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
+                            friends.forEach { friendUname ->
+
+                                Row(
+                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                                     modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(CircleShape)
-                                )
+                                        .padding(vertical = 4.dp)
+                                        .clickable {
+                                            onOpenProfile(friendUname)   // ✅ open friend profile
+                                        }
+                                ) {
 
-                                Spacer(modifier = Modifier.width(8.dp))
+                                    // 👤 FRIEND DP
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(context)
+                                            .data("${ApiClient.BASE_URL}/dp/$friendUname")
+                                            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                            .allowHardware(false)
+                                            .build(),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                    )
 
-                                Text(
-                                    text = "@$friendUname",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        text = "@$friendUname",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
                             }
                         }
                     }
