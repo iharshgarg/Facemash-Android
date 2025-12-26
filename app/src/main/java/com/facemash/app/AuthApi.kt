@@ -218,9 +218,9 @@ object AuthApi {
         }
     }
 
-    fun fetchProfile(username: String): Triple<String, String?, List<Post>> {
+    fun fetchProfile(username: String): UserProfile {
 
-        val request = okhttp3.Request.Builder()
+        val request = Request.Builder()
             .url("${ApiClient.BASE_URL}/users/$username")
             .get()
             .build()
@@ -228,10 +228,12 @@ object AuthApi {
         ApiClient.client.newCall(request).execute().use { response ->
 
             if (!response.isSuccessful) {
-                return Triple("", null, emptyList())
+                return UserProfile("", null, emptyList())
             }
 
-            val body = response.body?.string() ?: return Triple("", null, emptyList())
+            val body = response.body?.string()
+                ?: return UserProfile("", null, emptyList())
+
             val obj = JSONObject(body)
 
             val fullName = obj.getString("fName") + " " + obj.getString("lName")
@@ -277,7 +279,11 @@ object AuthApi {
                 )
             }
 
-            return Triple(fullName, dob, posts)
+            return UserProfile(
+                fullName = fullName,
+                dob = dob,
+                posts = posts
+            )
         }
     }
 

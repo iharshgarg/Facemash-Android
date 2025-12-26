@@ -44,13 +44,13 @@ fun ProfileScreen(
     suspend fun loadProfile() {
         loading = true
         try {
-            val result = withContext(Dispatchers.IO) {
+            val profile = withContext(Dispatchers.IO) {
                 AuthApi.fetchProfile(username)
             }
 
-            displayName = result.first
-            dobString = result.second
-            posts = result.third
+            displayName = profile.fullName
+            dobString = profile.dob
+            posts = profile.posts
 
             age = calculateAgeSafe(dobString)
 
