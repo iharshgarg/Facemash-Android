@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.clickable
 
 @Composable
 fun ProfileScreen(
@@ -26,7 +27,8 @@ fun ProfileScreen(
     onBack: () -> Unit,
     onSearch: () -> Unit,
     onOpenMyProfile: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onOpenProfile: (String) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -154,7 +156,12 @@ fun ProfileScreen(
 
                         friends.forEach { friendUname ->
                             Text(
-                                "@$friendUname",
+                                text = "@$friendUname",
+                                modifier = Modifier
+                                    .padding(vertical = 4.dp)
+                                    .clickable {
+                                        onOpenProfile(friendUname)   // 🔑 OPEN FRIEND PROFILE
+                                    },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary
                             )

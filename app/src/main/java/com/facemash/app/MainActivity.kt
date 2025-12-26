@@ -154,6 +154,10 @@ class MainActivity : ComponentActivity() {
                                     currentUserFullName = currentUserFullName,
                                     onBack = { viewingProfile = null },
                                     onSearch = { showSearch = true },
+                                    onOpenProfile = { uname ->
+                                        viewingProfile = uname
+                                        showSearch = false
+                                    },
                                     onOpenMyProfile = {
                                         viewingProfile = currentUsername
                                         showSearch = false
