@@ -228,11 +228,11 @@ object AuthApi {
         ApiClient.client.newCall(request).execute().use { response ->
 
             if (!response.isSuccessful) {
-                return UserProfile("", null, null, null, emptyList())
+                return UserProfile("", null, null, null, emptyList(), emptyList())
             }
 
             val body = response.body?.string()
-                ?: return UserProfile("", null, null, null, emptyList())
+                ?: return UserProfile("", null, null, null, emptyList(), emptyList())
 
             val obj = JSONObject(body)
 
@@ -249,6 +249,12 @@ object AuthApi {
             val contact = if (obj.has("contact") && !obj.isNull("contact")) {
                 obj.getString("contact")
             } else null
+
+            // ✅ FRIENDS LIST
+            val friends = if (obj.has("friends") && !obj.isNull("friends")) {
+                val arr = obj.getJSONArray("friends")
+                List(arr.length()) { i -> arr.getString(i) }
+            } else emptyList()
 
             val postsArray = obj.getJSONArray("posts")
             val posts = mutableListOf<Post>()
@@ -293,6 +299,7 @@ object AuthApi {
                 dob = dob,
                 sex = sex,
                 contact = contact,
+                friends = friends,
                 posts = posts
             )
         }

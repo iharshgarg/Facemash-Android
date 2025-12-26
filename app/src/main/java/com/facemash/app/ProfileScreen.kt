@@ -39,6 +39,7 @@ fun ProfileScreen(
     var age by remember { mutableStateOf<Int?>(null) }
     var sex by remember { mutableStateOf<String?>(null) }
     var contact by remember { mutableStateOf<String?>(null) }
+    var friends by remember { mutableStateOf<List<String>>(emptyList()) }
 
     val commentTexts = remember { mutableStateMapOf<String, String>() }
     val scope = rememberCoroutineScope()
@@ -54,6 +55,7 @@ fun ProfileScreen(
             dobString = profile.dob
             sex = profile.sex
             contact = profile.contact
+            friends = profile.friends
             posts = profile.posts
 
             age = calculateAgeSafe(dobString)
@@ -137,6 +139,26 @@ fun ProfileScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    if (friends.isNotEmpty()) {
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            "Friends (${friends.size})",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        friends.forEach { friendUname ->
+                            Text(
+                                "@$friendUname",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
 
                     Divider(modifier = Modifier.padding(top = 16.dp))

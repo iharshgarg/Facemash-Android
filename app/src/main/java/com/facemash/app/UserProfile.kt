@@ -4,6 +4,7 @@ data class UserProfile(
     val fullName: String,
     val dob: String?,
     val sex: String?,
-    val contact: String?,     // 👈 NEW
+    val contact: String?,
+    val friends: List<String>,     // 👈 NEW
     val posts: List<Post>
 )
