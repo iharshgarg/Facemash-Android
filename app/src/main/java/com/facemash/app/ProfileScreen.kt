@@ -180,35 +180,49 @@ fun ProfileScreen(
                             friends.forEach { friendUname ->
 
                                 Row(
-                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                                     modifier = Modifier
-                                        .padding(vertical = 4.dp)
+                                        .fillMaxWidth()
+                                        .padding(vertical = 6.dp)
                                         .clickable {
                                             onOpenProfile(friendUname)   // ✅ open friend profile
-                                        }
+                                        },
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                                 ) {
 
-                                    // 👤 FRIEND DP
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(context)
-                                            .data("${ApiClient.BASE_URL}/dp/$friendUname")
-                                            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
-                                            .allowHardware(false)
-                                            .build(),
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(28.dp)
-                                            .clip(CircleShape)
-                                    )
+                                    // 🧱 FIXED DP COLUMN
+                                    Box(
+                                        modifier = Modifier.width(36.dp),
+                                        contentAlignment = androidx.compose.ui.Alignment.Center
+                                    ) {
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(context)
+                                                .data("${ApiClient.BASE_URL}/dp/$friendUname")
+                                                .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                                .allowHardware(false)
+                                                .build(),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                                .clip(CircleShape)
+                                        )
+                                    }
 
                                     Spacer(modifier = Modifier.width(8.dp))
 
-                                    Text(
-                                        text = "@$friendUname",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                                    // 🧱 FIXED NAME COLUMN
+                                    Box(
+                                        modifier = Modifier.width(140.dp),
+                                        contentAlignment = androidx.compose.ui.Alignment.CenterStart
+                                    ) {
+                                        Text(
+                                            text = "@$friendUname",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            maxLines = 1
+                                        )
+                                    }
                                 }
                             }
                         }
