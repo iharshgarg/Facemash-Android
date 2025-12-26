@@ -38,6 +38,7 @@ fun ProfileScreen(
     var dobString by remember { mutableStateOf<String?>(null) }
     var age by remember { mutableStateOf<Int?>(null) }
     var sex by remember { mutableStateOf<String?>(null) }
+    var contact by remember { mutableStateOf<String?>(null) }
 
     val commentTexts = remember { mutableStateMapOf<String, String>() }
     val scope = rememberCoroutineScope()
@@ -52,6 +53,7 @@ fun ProfileScreen(
             displayName = profile.fullName
             dobString = profile.dob
             sex = profile.sex
+            contact = profile.contact
             posts = profile.posts
 
             age = calculateAgeSafe(dobString)
@@ -127,6 +129,15 @@ fun ProfileScreen(
                         "@$username",
                         color = MaterialTheme.colorScheme.primary
                     )
+
+                    if (!contact.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            contact!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
 
                     Divider(modifier = Modifier.padding(top = 16.dp))
                 }
