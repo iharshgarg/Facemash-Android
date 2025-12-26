@@ -218,7 +218,7 @@ object AuthApi {
         }
     }
 
-    fun fetchProfile(username: String): Pair<String, List<Post>> {
+    fun fetchProfile(username: String): Triple<String, String?, List<Post>> {
 
         val request = okhttp3.Request.Builder()
             .url("${ApiClient.BASE_URL}/users/$username")
@@ -228,13 +228,16 @@ object AuthApi {
         ApiClient.client.newCall(request).execute().use { response ->
 
             if (!response.isSuccessful) {
-                return Pair("", emptyList())
+                return Triple("", null, emptyList())
             }
 
-            val body = response.body?.string() ?: return Pair("", emptyList())
-            val obj = org.json.JSONObject(body)
+            val body = response.body?.string() ?: return Triple("", null, emptyList())
+            val obj = JSONObject(body)
 
             val fullName = obj.getString("fName") + " " + obj.getString("lName")
+            val dob = if (obj.has("dob") && !obj.isNull("dob")) {
+                obj.getString("dob")
+            } else null
 
             val postsArray = obj.getJSONArray("posts")
             val posts = mutableListOf<Post>()
@@ -242,7 +245,6 @@ object AuthApi {
             for (i in 0 until postsArray.length()) {
                 val p = postsArray.getJSONObject(i)
 
-                // parse comments
                 val commentsArray = p.getJSONArray("comments")
                 val comments = mutableListOf<Comment>()
 
@@ -256,27 +258,26 @@ object AuthApi {
                     )
                 }
 
-                val imageValue = if (p.has("image") && !p.isNull("image") && p.getString("image").isNotBlank()) {
-                    p.getString("image")
-                } else {
-                    null
-                }
+                val imageValue =
+                    if (p.has("image") && !p.isNull("image") && p.getString("image").isNotBlank())
+                        p.getString("image")
+                    else null
 
                 posts.add(
                     Post(
                         _id = p.getString("_id"),
-                        uname = p.getString("uname"),          // ✅ REQUIRED
+                        uname = p.getString("uname"),
                         fName = p.getString("fName"),
                         lName = p.getString("lName"),
                         content = p.getString("content"),
-                        image = imageValue,                    // ✅ SAFE
-                        createdAt = p.getString("createdAt"),  // ✅ REQUIRED
+                        image = imageValue,
+                        createdAt = p.getString("createdAt"),
                         comments = comments
                     )
                 )
             }
 
-            return Pair(fullName, posts)
+            return Triple(fullName, dob, posts)
         }
     }
 

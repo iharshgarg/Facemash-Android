@@ -35,6 +35,9 @@ fun ProfileScreen(
     var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
 
+    var dobString by remember { mutableStateOf<String?>(null) }
+    var age by remember { mutableStateOf<Int?>(null) }
+
     val commentTexts = remember { mutableStateMapOf<String, String>() }
     val scope = rememberCoroutineScope()
 
@@ -44,8 +47,13 @@ fun ProfileScreen(
             val result = withContext(Dispatchers.IO) {
                 AuthApi.fetchProfile(username)
             }
+
             displayName = result.first
-            posts = result.second
+            dobString = result.second
+            posts = result.third
+
+            age = calculateAgeSafe(dobString)
+
         } finally {
             loading = false
         }
@@ -96,7 +104,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        displayName,
+                        if (age != null) "$displayName ($age)" else displayName,
                         style = MaterialTheme.typography.titleLarge
                     )
 
@@ -222,5 +230,34 @@ fun ProfileScreen(
                 }
             }
         }
+    }
+}
+
+private fun calculateAgeSafe(dob: String?): Int? {
+    if (dob.isNullOrBlank()) return null
+
+    return try {
+        val year = dob.substring(0, 4).toInt()
+        val month = dob.substring(5, 7).toInt() - 1
+        val day = dob.substring(8, 10).toInt()
+
+        val dobCal = java.util.Calendar.getInstance()
+        dobCal.set(year, month, day)
+
+        val today = java.util.Calendar.getInstance()
+
+        var age = today.get(java.util.Calendar.YEAR) -
+                dobCal.get(java.util.Calendar.YEAR)
+
+        if (
+            today.get(java.util.Calendar.DAY_OF_YEAR) <
+            dobCal.get(java.util.Calendar.DAY_OF_YEAR)
+        ) {
+            age--
+        }
+
+        if (age < 0) null else age
+    } catch (e: Exception) {
+        null
     }
 }
