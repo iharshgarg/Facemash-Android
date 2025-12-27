@@ -57,16 +57,34 @@ fun ProfileScreen(
     val commentTexts = remember { mutableStateMapOf<String, String>() }
     val scope = rememberCoroutineScope()
 
+    var uploadingDp by remember { mutableStateOf(false) }
+    var dpRefreshKey by remember { mutableStateOf(0) }
+
     var selectedDpUri by remember { mutableStateOf<Uri?>(null) }
     var isPickingDp by remember { mutableStateOf(false) }
     val pickDpLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        isPickingDp = false   // 🔓 unlock when picker closes
-        if (uri != null) {
-            selectedDpUri = uri
+        isPickingDp = false
+
+        if (uri != null && !uploadingDp) {
+            uploadingDp = true
+
+            scope.launch {
+                val success = withContext(Dispatchers.IO) {
+                    AuthApi.uploadProfileDp(context, uri)
+                }
+
+                if (success) {
+                    dpRefreshKey++   // 🔄 reload image
+                }
+
+                uploadingDp = false
+            }
         }
     }
+
+
 
     suspend fun loadProfile() {
         loading = true
@@ -124,7 +142,7 @@ fun ProfileScreen(
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(context)
-                                .data("${ApiClient.BASE_URL}/dp/$username")
+                                .data("${ApiClient.BASE_URL}/dp/$username?ts=$dpRefreshKey")
                                 .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
                                 .allowHardware(false)
                                 .build(),
@@ -138,8 +156,9 @@ fun ProfileScreen(
                         // ✅ SHOW ONLY ON MY OWN PROFILE
                         if (username == currentUsername) {
                             IconButton(
+                                enabled = !isPickingDp && !uploadingDp,
                                 onClick = {
-                                    if (!isPickingDp) {
+                                    if (!isPickingDp && !uploadingDp) {
                                         isPickingDp = true
                                         pickDpLauncher.launch("image/*")
                                     }
@@ -149,12 +168,20 @@ fun ProfileScreen(
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.primary)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Change Photo",
-                                    tint = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                if (uploadingDp) {
+                                    CircularProgressIndicator(
+                                        strokeWidth = 2.dp,
+                                        modifier = Modifier.size(18.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Edit,
+                                        contentDescription = "Change Photo",
+                                        tint = MaterialTheme.colorScheme.onPrimary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }

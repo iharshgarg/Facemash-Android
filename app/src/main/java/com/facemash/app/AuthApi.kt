@@ -305,6 +305,39 @@ object AuthApi {
         }
     }
 
+    fun uploadProfileDp(
+        context: Context,
+        imageUri: Uri
+    ): Boolean {
+        val inputStream = context.contentResolver.openInputStream(imageUri)
+            ?: return false
+
+        val tempFile = File.createTempFile("dp_upload", ".jpg", context.cacheDir)
+
+        tempFile.outputStream().use { output ->
+            inputStream.copyTo(output)
+        }
+
+        val requestBody = MultipartBody.Builder()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart(
+                "dp",
+                tempFile.name,
+                tempFile.asRequestBody("image/*".toMediaType())
+            )
+            .build()
+
+        val request = Request.Builder()
+            .url("${ApiClient.BASE_URL}/upload-dp")
+            .post(requestBody)
+            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+            .build()
+
+        ApiClient.client.newCall(request).execute().use {
+            return it.isSuccessful
+        }
+    }
+
     suspend fun searchUsers(query: String): List<UserSearchResult> {
         if (query.isBlank()) return emptyList()
 
