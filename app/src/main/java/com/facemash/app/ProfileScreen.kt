@@ -12,6 +12,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import coil.imageLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,7 +59,6 @@ fun ProfileScreen(
     val scope = rememberCoroutineScope()
 
     var uploadingDp by remember { mutableStateOf(false) }
-    var dpRefreshKey by remember { mutableStateOf(0) }
 
     var selectedDpUri by remember { mutableStateOf<Uri?>(null) }
     var isPickingDp by remember { mutableStateOf(false) }
@@ -76,7 +76,21 @@ fun ProfileScreen(
                 }
 
                 if (success) {
-                    dpRefreshKey++   // 🔄 reload image
+
+                    // 🧹 CLEAR COIL CACHE (MEMORY + DISK)
+                    context.imageLoader.memoryCache?.clear()
+                    context.imageLoader.diskCache?.clear()
+
+                    // 🔥 HARD APP UI RESTART
+                    val intent = context.packageManager
+                        .getLaunchIntentForPackage(context.packageName)
+
+                    intent?.addFlags(
+                        android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    )
+
+                    context.startActivity(intent)
                 }
 
                 uploadingDp = false
@@ -141,7 +155,7 @@ fun ProfileScreen(
                     ) {
                         AsyncImage(
                             model = ImageRequest.Builder(context)
-                                .data("${ApiClient.BASE_URL}/dp/$username?ts=$dpRefreshKey")
+                                .data("${ApiClient.BASE_URL}/dp/$username")
                                 .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
                                 .allowHardware(false)
                                 .build(),
