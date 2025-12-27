@@ -35,53 +35,59 @@ class MainActivity : ComponentActivity() {
             /* -------------------- STARTUP CHECK -------------------- */
 
             LaunchedEffect(Unit) {
-                try {
-                    // 1️⃣ Internet check (IO THREAD)
-                    val hasInternet = withContext(Dispatchers.IO) {
-                        NetworkChecker.hasInternet()
-                    }
-                    if (!hasInternet) {
-                        appStatus = AppStatus.NoInternet
-                        return@LaunchedEffect
-                    }
+                while (true) {
+                    try {
+                        // 1️⃣ Internet check
+                        val hasInternet = withContext(Dispatchers.IO) {
+                            NetworkChecker.hasInternet()
+                        }
+                        if (!hasInternet) {
+                            appStatus = AppStatus.NoInternet
+                            kotlinx.coroutines.delay(1000)
+                            continue
+                        }
 
-                    // 2️⃣ Server heartbeat (IO THREAD)
-                    val serverUp = withContext(Dispatchers.IO) {
-                        NetworkChecker.isServerUp()
-                    }
-                    if (!serverUp) {
+                        // 2️⃣ Server heartbeat
+                        val serverUp = withContext(Dispatchers.IO) {
+                            NetworkChecker.isServerUp()
+                        }
+                        if (!serverUp) {
+                            appStatus = AppStatus.ServerDown
+                            kotlinx.coroutines.delay(1000)
+                            continue
+                        }
+
+                        // 3️⃣ Session check
+                        val sessionResult = withContext(Dispatchers.IO) {
+                            AuthApi.checkSession()
+                        }
+
+                        if (sessionResult.contains("uname")) {
+                            isLoggedIn = true
+
+                            currentUsername =
+                                """"uname"\s*:\s*"([^"]+)"""".toRegex()
+                                    .find(sessionResult)?.groupValues?.get(1) ?: ""
+
+                            val fName =
+                                """"fName"\s*:\s*"([^"]+)"""".toRegex()
+                                    .find(sessionResult)?.groupValues?.get(1) ?: ""
+
+                            val lName =
+                                """"lName"\s*:\s*"([^"]+)"""".toRegex()
+                                    .find(sessionResult)?.groupValues?.get(1) ?: ""
+
+                            currentUserFirstName = fName
+                            currentUserFullName = "$fName $lName"
+                        }
+
+                        appStatus = AppStatus.Online
+                        break   // ✅ STOP retry loop once online
+
+                    } catch (e: Exception) {
                         appStatus = AppStatus.ServerDown
-                        return@LaunchedEffect
+                        kotlinx.coroutines.delay(1000)
                     }
-
-                    // 3️⃣ Session check (IO THREAD)
-                    val sessionResult = withContext(Dispatchers.IO) {
-                        AuthApi.checkSession()
-                    }
-
-                    if (sessionResult.contains("uname")) {
-                        isLoggedIn = true
-
-                        currentUsername =
-                            """"uname"\s*:\s*"([^"]+)"""".toRegex()
-                                .find(sessionResult)?.groupValues?.get(1) ?: ""
-
-                        val fName =
-                            """"fName"\s*:\s*"([^"]+)"""".toRegex()
-                                .find(sessionResult)?.groupValues?.get(1) ?: ""
-
-                        val lName =
-                            """"lName"\s*:\s*"([^"]+)"""".toRegex()
-                                .find(sessionResult)?.groupValues?.get(1) ?: ""
-
-                        currentUserFirstName = fName
-                        currentUserFullName = "$fName $lName"
-                    }
-
-                    appStatus = AppStatus.Online
-
-                } catch (e: Exception) {
-                    appStatus = AppStatus.ServerDown
                 }
             }
 
