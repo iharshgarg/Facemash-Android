@@ -24,6 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.background
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 @Composable
 fun ProfileScreen(
@@ -53,6 +56,17 @@ fun ProfileScreen(
 
     val commentTexts = remember { mutableStateMapOf<String, String>() }
     val scope = rememberCoroutineScope()
+
+    var selectedDpUri by remember { mutableStateOf<Uri?>(null) }
+    var isPickingDp by remember { mutableStateOf(false) }
+    val pickDpLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        isPickingDp = false   // 🔓 unlock when picker closes
+        if (uri != null) {
+            selectedDpUri = uri
+        }
+    }
 
     suspend fun loadProfile() {
         loading = true
@@ -125,7 +139,10 @@ fun ProfileScreen(
                         if (username == currentUsername) {
                             IconButton(
                                 onClick = {
-                                    // 🔜 we’ll handle image picker next step
+                                    if (!isPickingDp) {
+                                        isPickingDp = true
+                                        pickDpLauncher.launch("image/*")
+                                    }
                                 },
                                 modifier = Modifier
                                     .size(32.dp)
