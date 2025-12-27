@@ -141,6 +141,18 @@ fun ProfileScreen(
         // 🔽 EVERYTHING BELOW SCROLLS
         LazyColumn(modifier = Modifier.fillMaxSize()) {
 
+            // 🔔 FRIEND REQUESTS (TOP, BELOW TOPBAR)
+            item {
+                FriendRequestsSection(
+                    onRequestHandled = {
+                        // refresh profile after accept
+                        scope.launch { loadProfile() }
+                    }
+                )
+
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
             // 👤 PROFILE HEADER (DP + NAME)
             item {
                 Column(

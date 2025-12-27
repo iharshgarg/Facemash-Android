@@ -72,6 +72,18 @@ fun FeedScreen(
         // 🔽 EVERYTHING BELOW SCROLLS
         LazyColumn(modifier = Modifier.fillMaxSize()) {
 
+            // 🔔 FRIEND REQUESTS (TOP, BELOW TOPBAR)
+            item {
+                FriendRequestsSection(
+                    onRequestHandled = {
+                        // refresh feed when request accepted
+                        scope.launch { loadFeed() }
+                    }
+                )
+
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
             // 📝 CREATE POST (SCROLLS)
             item {
                 Column(modifier = Modifier.padding(16.dp)) {
