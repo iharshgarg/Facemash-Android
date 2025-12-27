@@ -135,7 +135,6 @@ fun ProfileScreen(
                     horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
                 ) {
 
-                    // 🧑 PROFILE DP (LARGE)
                     // 🧑 PROFILE DP (LARGE) + CHANGE BUTTON
                     Box(
                         contentAlignment = Alignment.BottomEnd
