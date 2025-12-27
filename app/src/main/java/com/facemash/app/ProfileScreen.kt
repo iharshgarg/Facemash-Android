@@ -21,6 +21,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.foundation.background
 
 @Composable
 fun ProfileScreen(
@@ -101,18 +104,43 @@ fun ProfileScreen(
                 ) {
 
                     // 🧑 PROFILE DP (LARGE)
-                    AsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data("${ApiClient.BASE_URL}/dp/$username")
-                            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
-                            .allowHardware(false)
-                            .build(),
-                        contentDescription = "Profile Picture",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                    )
+                    // 🧑 PROFILE DP (LARGE) + CHANGE BUTTON
+                    Box(
+                        contentAlignment = Alignment.BottomEnd
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data("${ApiClient.BASE_URL}/dp/$username")
+                                .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                .allowHardware(false)
+                                .build(),
+                            contentDescription = "Profile Picture",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                        )
+
+                        // ✅ SHOW ONLY ON MY OWN PROFILE
+                        if (username == currentUsername) {
+                            IconButton(
+                                onClick = {
+                                    // 🔜 we’ll handle image picker next step
+                                },
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Change Photo",
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
