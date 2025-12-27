@@ -58,8 +58,10 @@ fun ProfileScreen(
     val commentTexts = remember { mutableStateMapOf<String, String>() }
     val scope = rememberCoroutineScope()
 
-    var uploadingDp by remember { mutableStateOf(false) }
+    var friendReqStatus by remember { mutableStateOf<String?>(null) }
+    var sendingFriendReq by remember { mutableStateOf(false) }
 
+    var uploadingDp by remember { mutableStateOf(false) }
     var selectedDpUri by remember { mutableStateOf<Uri?>(null) }
     var isPickingDp by remember { mutableStateOf(false) }
     val pickDpLauncher = rememberLauncherForActivityResult(
@@ -224,7 +226,7 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    // ➕ ADD FRIEND BUTTON (ONLY AFTER PROFILE LOADED)
+                    // ➕ ADD FRIEND BUTTON (SAFE + NO FLICKER)
                     if (
                         !loading &&
                         username != currentUsername &&
@@ -234,12 +236,38 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Button(
+                            enabled = !sendingFriendReq,
                             onClick = {
-                                // 🚧 backend wiring later
-                            },
-                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp)
+                                sendingFriendReq = true
+
+                                scope.launch {
+                                    val result = withContext(Dispatchers.IO) {
+                                        AuthApi.sendFriendRequest(username)
+                                    }
+
+                                    friendReqStatus = result
+                                    sendingFriendReq = false
+                                }
+                            }
                         ) {
-                            Text("Add Friend")
+                            if (sendingFriendReq) {
+                                CircularProgressIndicator(
+                                    strokeWidth = 2.dp,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            } else {
+                                Text("Add Friend")
+                            }
+                        }
+
+                        // 📩 STATUS MESSAGE (same as web)
+                        if (friendReqStatus != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                friendReqStatus!!,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
 

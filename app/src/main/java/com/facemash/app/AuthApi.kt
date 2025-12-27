@@ -372,4 +372,24 @@ object AuthApi {
 
         return results
     }
+
+    fun sendFriendRequest(targetUsername: String): String {
+
+        val json = JSONObject().apply {
+            put("targetUsername", targetUsername)
+        }
+
+        val body = json.toString()
+            .toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder()
+            .url("${ApiClient.BASE_URL}/send-friend-req")
+            .post(body)
+            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+            .build()
+
+        ApiClient.client.newCall(request).execute().use { response ->
+            return response.body?.string() ?: "Failed to send request"
+        }
+    }
 }
