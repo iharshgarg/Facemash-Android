@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.34.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

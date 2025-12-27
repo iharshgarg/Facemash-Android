@@ -18,6 +18,7 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun FriendRequestsSection(
+    refreshKey: Int,
     onRequestHandled: () -> Unit = {}
 ) {
 
@@ -35,8 +36,8 @@ fun FriendRequestsSection(
         }
     }
 
-    // 🔥 Load once — no loading flicker on scroll
-    LaunchedEffect(Unit) {
+    // 🔁 RELOAD WHEN PARENT ASKS
+    LaunchedEffect(refreshKey) {
         loadRequests()
     }
 
@@ -47,7 +48,6 @@ fun FriendRequestsSection(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        // ✅ NO REQUESTS
         if (requests.isEmpty()) {
             Text(
                 text = "No new friend requests",
@@ -55,8 +55,6 @@ fun FriendRequestsSection(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else {
-
-            // 👥 REQUEST LIST
             requests.forEach { requester ->
 
                 Card(
@@ -71,13 +69,10 @@ fun FriendRequestsSection(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
 
-                        // 👤 DP + TEXT (CENTERED)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-
-                            // 👤 REQUESTER DP (CROPPED, NO EMPTY SPACE)
                             AsyncImage(
                                 model = ImageRequest.Builder(context)
                                     .data("${ApiClient.BASE_URL}/dp/$requester")
@@ -88,7 +83,7 @@ fun FriendRequestsSection(
                                     .allowHardware(false)
                                     .build(),
                                 contentDescription = null,
-                                contentScale = ContentScale.Crop, // 🔑 important
+                                contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .size(32.dp)
                                     .clip(CircleShape)
@@ -104,10 +99,7 @@ fun FriendRequestsSection(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // ✅ ACTION BUTTONS
-                        Row(
-                            horizontalArrangement = Arrangement.Center
-                        ) {
+                        Row(horizontalArrangement = Arrangement.Center) {
 
                             Button(
                                 enabled = actionInProgress == null,
@@ -118,7 +110,6 @@ fun FriendRequestsSection(
                                             AuthApi.acceptFriendRequest(requester)
                                         }
                                         actionInProgress = null
-                                        loadRequests()
                                         onRequestHandled()
                                     }
                                 }
