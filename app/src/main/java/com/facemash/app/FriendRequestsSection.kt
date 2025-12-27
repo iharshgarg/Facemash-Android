@@ -1,11 +1,17 @@
 package com.facemash.app
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -16,6 +22,7 @@ fun FriendRequestsSection(
 ) {
 
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var requests by remember { mutableStateOf<List<String>>(emptyList()) }
     var actionInProgress by remember { mutableStateOf<String?>(null) }
@@ -28,7 +35,7 @@ fun FriendRequestsSection(
         }
     }
 
-    // 🔥 Load once, no loading flicker
+    // 🔥 Load once — no loading flicker on scroll
     LaunchedEffect(Unit) {
         loadRequests()
     }
@@ -40,7 +47,7 @@ fun FriendRequestsSection(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        // ✅ NO REQUESTS → SIMPLE, CALM UI
+        // ✅ NO REQUESTS
         if (requests.isEmpty()) {
             Text(
                 text = "No new friend requests",
@@ -64,16 +71,44 @@ fun FriendRequestsSection(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
 
-                        Text(
-                            text = "$requester sent you a friend request",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        // 👤 DP + TEXT (CENTERED)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                            // 👤 REQUESTER DP (CROPPED, NO EMPTY SPACE)
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data("${ApiClient.BASE_URL}/dp/$requester")
+                                    .addHeader(
+                                        "Cookie",
+                                        ApiClient.getCookieHeader() ?: ""
+                                    )
+                                    .allowHardware(false)
+                                    .build(),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop, // 🔑 important
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                            )
 
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                text = "$requester sent you a friend request",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // ✅ ACTION BUTTONS
                         Row(
                             horizontalArrangement = Arrangement.Center
                         ) {
+
                             Button(
                                 enabled = actionInProgress == null,
                                 onClick = {
