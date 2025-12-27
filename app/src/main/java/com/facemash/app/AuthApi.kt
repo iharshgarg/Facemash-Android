@@ -392,4 +392,64 @@ object AuthApi {
             return response.body?.string() ?: "Failed to send request"
         }
     }
+
+    fun fetchFriendRequests(): List<String> {
+
+        val request = Request.Builder()
+            .url("${ApiClient.BASE_URL}/notifs")
+            .get()
+            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+            .build()
+
+        ApiClient.client.newCall(request).execute().use { response ->
+
+            if (!response.isSuccessful) return emptyList()
+
+            val body = response.body?.string() ?: return emptyList()
+            val obj = JSONObject(body)
+
+            val arr = obj.getJSONArray("friendRequests")
+            return List(arr.length()) { i -> arr.getString(i) }
+        }
+    }
+
+    fun acceptFriendRequest(requesterUsername: String): String {
+
+        val json = JSONObject().apply {
+            put("requesterUsername", requesterUsername)
+        }
+
+        val body = json.toString()
+            .toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder()
+            .url("${ApiClient.BASE_URL}/accept-friend-req")
+            .post(body)
+            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+            .build()
+
+        ApiClient.client.newCall(request).execute().use {
+            return it.body?.string() ?: "Failed to accept request"
+        }
+    }
+
+    fun rejectFriendRequest(requesterUsername: String): String {
+
+        val json = JSONObject().apply {
+            put("requesterUsername", requesterUsername)
+        }
+
+        val body = json.toString()
+            .toRequestBody("application/json".toMediaType())
+
+        val request = Request.Builder()
+            .url("${ApiClient.BASE_URL}/reject-friend-req")
+            .post(body)
+            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+            .build()
+
+        ApiClient.client.newCall(request).execute().use {
+            return it.body?.string() ?: "Failed to reject request"
+        }
+    }
 }
