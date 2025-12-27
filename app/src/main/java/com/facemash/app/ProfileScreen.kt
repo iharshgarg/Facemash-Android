@@ -224,6 +224,25 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
 
+                    // ➕ ADD FRIEND BUTTON (ONLY FOR OTHER USERS & NOT ALREADY FRIEND)
+                    if (
+                        username != currentUsername &&
+                        !friends.contains(currentUsername)
+                    ) {
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Button(
+                            onClick = {
+                                // 🚧 backend wiring later
+                                // AuthApi.sendFriendRequest(username)
+                            },
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp)
+                        ) {
+                            Text("Add Friend")
+                        }
+                    }
+
                     if (!contact.isNullOrBlank()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
