@@ -224,8 +224,9 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    // ➕ ADD FRIEND BUTTON (ONLY FOR OTHER USERS & NOT ALREADY FRIEND)
+                    // ➕ ADD FRIEND BUTTON (ONLY AFTER PROFILE LOADED)
                     if (
+                        !loading &&
                         username != currentUsername &&
                         !friends.contains(currentUsername)
                     ) {
@@ -235,7 +236,6 @@ fun ProfileScreen(
                         Button(
                             onClick = {
                                 // 🚧 backend wiring later
-                                // AuthApi.sendFriendRequest(username)
                             },
                             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp)
                         ) {
