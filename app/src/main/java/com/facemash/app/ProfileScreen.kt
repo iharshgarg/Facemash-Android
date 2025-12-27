@@ -101,7 +101,6 @@ fun ProfileScreen(
     }
 
 
-
     suspend fun loadProfile() {
         loading = true
         try {
