@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -18,10 +19,14 @@ import coil.request.ImageRequest
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 
+// 🎨 OG FACEBOOK COLORS
+private val FacebookBlue = Color(0xFF3B5998)
+private val FacebookBlueLight = Color(0xFF4E71BA)
+
 @Composable
 fun TopBar(
-    currentUsername: String,          // ✅ uname (lion)
-    currentUserFirstName: String,     // ✅ John
+    currentUsername: String,
+    currentUserFirstName: String,
     onHome: () -> Unit,
     onProfile: () -> Unit,
     onSearch: () -> Unit,
@@ -29,7 +34,10 @@ fun TopBar(
 ) {
     val context = LocalContext.current
 
-    Surface(shadowElevation = 4.dp) {
+    Surface(
+        color = FacebookBlue,
+        shadowElevation = 6.dp
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -37,13 +45,14 @@ fun TopBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // 🔵 FACEMASH (NEVER BREAKS)
+            // 🔵 FACEMASH LOGO
             TextButton(
                 onClick = onHome,
                 contentPadding = PaddingValues(0.dp)
             ) {
                 Text(
                     "facemash",
+                    color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Clip,
                     style = MaterialTheme.typography.titleMedium
@@ -52,13 +61,13 @@ fun TopBar(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // 🔍 SEARCH BAR (CLICKABLE)
+            // 🔍 SEARCH BAR
             Row(
                 modifier = Modifier
                     .weight(1f)
                     .height(36.dp)
                     .clip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(FacebookBlueLight)
                     .clickable { onSearch() }
                     .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -66,7 +75,7 @@ fun TopBar(
                 Text(
                     text = "Search users",
                     fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color.White.copy(alpha = 0.9f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -74,7 +83,7 @@ fun TopBar(
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            // 👤 MY PROFILE (DP + FIRST NAME)
+            // 👤 PROFILE
             TextButton(
                 onClick = onProfile,
                 contentPadding = PaddingValues(horizontal = 4.dp)
@@ -86,7 +95,7 @@ fun TopBar(
                         .allowHardware(false)
                         .build(),
                     contentDescription = "DP",
-                    contentScale = ContentScale.Crop,   // 🔑 FIX
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(26.dp)
                         .clip(CircleShape)
@@ -96,6 +105,7 @@ fun TopBar(
 
                 Text(
                     currentUserFirstName,
+                    color = Color.White,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodySmall
@@ -109,8 +119,8 @@ fun TopBar(
             ) {
                 Text(
                     "Home",
+                    color = Color.White,
                     maxLines = 1,
-                    overflow = TextOverflow.Clip,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -122,8 +132,8 @@ fun TopBar(
             ) {
                 Text(
                     "Logout",
+                    color = Color.White,
                     maxLines = 1,
-                    overflow = TextOverflow.Clip,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
