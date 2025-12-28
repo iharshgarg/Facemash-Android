@@ -41,6 +41,7 @@ fun FeedScreen(
     val context = LocalContext.current
 
     var friendReqRefreshKey by remember { mutableStateOf(0) }
+    var myFriends by remember { mutableStateOf<List<String>>(emptyList()) }
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -51,6 +52,11 @@ fun FeedScreen(
     suspend fun loadFeed() {
         loading = true
         try {
+            val profile = withContext(Dispatchers.IO) {
+                AuthApi.fetchProfile(currentUsername)
+            }
+            myFriends = profile.friends
+
             posts = withContext(Dispatchers.IO) {
                 AuthApi.fetchFeed()
             }
@@ -160,6 +166,7 @@ fun FeedScreen(
                 item {
                     SuggestionBoxSection(
                         currentUsername = currentUsername,
+                        myFriends = myFriends,
                         onUserClick = { uname ->
                             onOpenProfile(uname)
                         }
