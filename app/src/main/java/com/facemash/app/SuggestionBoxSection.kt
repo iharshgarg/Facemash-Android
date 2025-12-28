@@ -31,6 +31,7 @@ fun SuggestionBoxSection(
 
     var users by remember { mutableStateOf<List<UserSearchResult>>(emptyList()) }
     var sendingReq by remember { mutableStateOf<String?>(null) }
+    var sentStatus by remember { mutableStateOf<Map<String, Boolean>>(emptyMap()) }
 
     LaunchedEffect(Unit) {
         users = withContext(Dispatchers.IO) {
@@ -99,6 +100,7 @@ fun SuggestionBoxSection(
                     )
 
                     // ➕ ADD FRIEND (ONLY IF NOT FRIEND)
+                    // ➕ ADD FRIEND (ONLY IF NOT FRIEND)
                     if (!myFriends.contains(user.uname)) {
 
                         Spacer(modifier = Modifier.height(4.dp))
@@ -107,22 +109,38 @@ fun SuggestionBoxSection(
                             enabled = sendingReq != user.uname,
                             onClick = {
                                 sendingReq = user.uname
+
                                 scope.launch {
                                     withContext(Dispatchers.IO) {
                                         AuthApi.sendFriendRequest(user.uname)
                                     }
+
+                                    // ✅ show "Request sent"
+                                    sentStatus = sentStatus + (user.uname to true)
                                     sendingReq = null
+
+                                    // ⏳ revert back after 1.2s
+                                    kotlinx.coroutines.delay(1200)
+                                    sentStatus = sentStatus - user.uname
                                 }
                             },
                             contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)
                         ) {
-                            if (sendingReq == user.uname) {
-                                CircularProgressIndicator(
-                                    strokeWidth = 2.dp,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            } else {
-                                Text("Add", style = MaterialTheme.typography.labelSmall)
+                            when {
+                                sendingReq == user.uname -> {
+                                    CircularProgressIndicator(
+                                        strokeWidth = 2.dp,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+
+                                sentStatus[user.uname] == true -> {
+                                    Text("Request sent", style = MaterialTheme.typography.labelSmall)
+                                }
+
+                                else -> {
+                                    Text("Add", style = MaterialTheme.typography.labelSmall)
+                                }
                             }
                         }
                     }
