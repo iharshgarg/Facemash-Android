@@ -153,8 +153,6 @@ fun FeedScreen(
                                 Text("Post")
                             }
                         }
-
-                        Divider(modifier = Modifier.padding(top = 12.dp))
                     }
                 }
 
@@ -166,8 +164,6 @@ fun FeedScreen(
                             onOpenProfile(uname)
                         }
                     )
-
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
                 }
 
                 // ⏳ LOADING
