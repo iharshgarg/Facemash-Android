@@ -28,7 +28,7 @@ fun FeedScreen(
     currentUserFirstName: String,     // ✅ John
     currentUserFullName: String,      // ✅ John Leawes
     onLogout: () -> Unit,
-    onOpenProfile: () -> Unit,
+    onOpenProfile: (String) -> Unit,
     onOpenSearch: () -> Unit
 ) {
 
@@ -68,7 +68,9 @@ fun FeedScreen(
             currentUsername = currentUsername,
             currentUserFirstName = currentUserFirstName,
             onHome = { scope.launch { loadFeed() } },
-            onProfile = onOpenProfile,
+            onProfile = {
+                onOpenProfile(currentUsername)
+            },
             onSearch = onOpenSearch,
             onLogout = onLogout
         )
@@ -154,6 +156,18 @@ fun FeedScreen(
 
                         Divider(modifier = Modifier.padding(vertical = 12.dp))
                     }
+                }
+
+                // 👥 SUGGESTED USERS
+                item {
+                    SuggestionBoxSection(
+                        currentUsername = currentUsername,
+                        onUserClick = { uname ->
+                            onOpenProfile(uname)
+                        }
+                    )
+
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
                 }
 
                 // ⏳ LOADING

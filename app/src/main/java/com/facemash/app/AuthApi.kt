@@ -452,4 +452,36 @@ object AuthApi {
             return it.body?.string() ?: "Failed to reject request"
         }
     }
+
+    fun fetchSuggestionUsers(): List<UserSearchResult> {
+
+        val request = Request.Builder()
+            .url("${ApiClient.BASE_URL}/suggestion-box")
+            .get()
+            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+            .build()
+
+        ApiClient.client.newCall(request).execute().use { response ->
+
+            if (!response.isSuccessful) return emptyList()
+
+            val body = response.body?.string() ?: return emptyList()
+            val jsonArray = JSONArray(body)
+
+            val users = mutableListOf<UserSearchResult>()
+
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                users.add(
+                    UserSearchResult(
+                        uname = obj.getString("uname"),
+                        fName = obj.getString("fName"),
+                        lName = obj.getString("lName")
+                    )
+                )
+            }
+
+            return users
+        }
+    }
 }
