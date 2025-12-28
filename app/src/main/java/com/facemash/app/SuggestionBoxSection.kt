@@ -89,7 +89,9 @@ fun SuggestionBoxSection(
                         Text(
                             text = "${user.fName} ${user.lName}",
                             style = MaterialTheme.typography.bodySmall,
-                            maxLines = 2
+                            maxLines = 2,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
