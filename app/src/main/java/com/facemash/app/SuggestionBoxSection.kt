@@ -106,6 +106,7 @@ fun SuggestionBoxSection(
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Button(
+                            modifier = Modifier.width(96.dp),
                             enabled = sendingReq != user.uname,
                             onClick = {
                                 sendingReq = user.uname
@@ -135,7 +136,13 @@ fun SuggestionBoxSection(
                                 }
 
                                 sentStatus[user.uname] == true -> {
-                                    Text("Request sent", style = MaterialTheme.typography.labelSmall)
+                                    Text(
+                                        text = "Request sent",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        maxLines = 2,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                 }
 
                                 else -> {
