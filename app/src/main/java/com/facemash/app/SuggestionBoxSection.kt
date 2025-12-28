@@ -43,9 +43,7 @@ fun SuggestionBoxSection(
     if (users.isNotEmpty()) {
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
