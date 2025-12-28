@@ -154,7 +154,7 @@ fun FeedScreen(
                             }
                         }
 
-                        Divider(modifier = Modifier.padding(vertical = 12.dp))
+                        Divider(modifier = Modifier.padding(top = 12.dp))
                     }
                 }
 
