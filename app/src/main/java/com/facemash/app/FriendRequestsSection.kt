@@ -15,6 +15,7 @@ import androidx.compose.ui.layout.ContentScale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun FriendRequestsSection(
@@ -60,7 +61,10 @@ fun FriendRequestsSection(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth(0.9f)
-                        .padding(vertical = 4.dp)
+                        .padding(vertical = 4.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = Color(0xFFF0F2F5) // Facebook light gray
+                    )
                 ) {
                     Column(
                         modifier = Modifier
