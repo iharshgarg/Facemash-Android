@@ -37,6 +37,9 @@ class MainActivity : ComponentActivity() {
                 var currentUserFirstName by remember { mutableStateOf("") }
                 var currentUserFullName by remember { mutableStateOf("") }
 
+                var showChatList by remember { mutableStateOf(false) }
+                var chattingWith by remember { mutableStateOf<String?>(null) }
+
                 /* -------------------- STARTUP CHECK -------------------- */
 
                 LaunchedEffect(Unit) {
@@ -147,6 +150,23 @@ class MainActivity : ComponentActivity() {
                         } else {
 
                             when {
+                                showChatList -> {
+                                    ChatListScreen(
+                                        onBack = { showChatList = false },
+                                        onOpenChat = { friendUname ->
+                                            chattingWith = friendUname
+                                            showChatList = false
+                                        }
+                                    )
+                                }
+
+                                chattingWith != null -> {
+                                    ChatScreen(
+                                        friendUsername = chattingWith!!,
+                                        onBack = { chattingWith = null }
+                                    )
+                                }
+
                                 showSearch -> {
                                     SearchScreen(
                                         onUserClick = { uname ->
@@ -178,7 +198,8 @@ class MainActivity : ComponentActivity() {
                                             isLoggedIn = false
                                             viewingProfile = null
                                             showSearch = false
-                                        }
+                                        },
+                                        onOpenChat = { showChatList = true }
                                     )
                                 }
 
@@ -196,7 +217,8 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onOpenSearch = {
                                             showSearch = true
-                                        }
+                                        },
+                                        onOpenChat = { showChatList = true }
                                     )
                                 }
                             }

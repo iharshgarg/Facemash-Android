@@ -41,7 +41,8 @@ fun ProfileScreen(
     onSearch: () -> Unit,
     onOpenMyProfile: () -> Unit,
     onLogout: () -> Unit,
-    onOpenProfile: (String) -> Unit
+    onOpenProfile: (String) -> Unit,
+    onOpenChat: () -> Unit
 ) {
 
     val context = LocalContext.current
@@ -130,384 +131,391 @@ fun ProfileScreen(
         loadProfile()
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()){
 
-        // 🔒 FIXED TOP BAR
-        TopBar(
-            currentUsername = currentUsername,
-            currentUserFirstName = currentUserFirstName,
-            onHome = onBack,
-            onProfile = onOpenMyProfile,
-            onSearch = onSearch,
-            onLogout = onLogout
-        )
+        Column(modifier = Modifier.fillMaxSize()) {
 
-        val refreshState = rememberSwipeRefreshState(isRefreshing = loading)
+            // 🔒 FIXED TOP BAR
+            TopBar(
+                currentUsername = currentUsername,
+                currentUserFirstName = currentUserFirstName,
+                onHome = onBack,
+                onProfile = onOpenMyProfile,
+                onSearch = onSearch,
+                onLogout = onLogout
+            )
 
-        SwipeRefresh(
-            state = refreshState,
-            onRefresh = {
-                scope.launch {
-                    loadProfile()
-                    friendReqRefreshKey++
+            val refreshState = rememberSwipeRefreshState(isRefreshing = loading)
+
+            SwipeRefresh(
+                state = refreshState,
+                onRefresh = {
+                    scope.launch {
+                        loadProfile()
+                        friendReqRefreshKey++
+                    }
                 }
-            }
-        ) { // 🔽 EVERYTHING BELOW SCROLLS
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
+            ) { // 🔽 EVERYTHING BELOW SCROLLS
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
 
-                // 🔔 FRIEND REQUESTS (TOP, BELOW TOPBAR)
-                item {
-                    FriendRequestsSection(
-                        refreshKey = friendReqRefreshKey,
-                        onRequestHandled = {
-                            scope.launch {
-                                loadProfile()
-                                friendReqRefreshKey++
+                    // 🔔 FRIEND REQUESTS (TOP, BELOW TOPBAR)
+                    item {
+                        FriendRequestsSection(
+                            refreshKey = friendReqRefreshKey,
+                            onRequestHandled = {
+                                scope.launch {
+                                    loadProfile()
+                                    friendReqRefreshKey++
+                                }
                             }
-                        }
-                    )
+                        )
 
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
-                }
+                        Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    }
 
-                // 👤 PROFILE HEADER (DP + NAME)
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 24.dp, bottom = 12.dp),
-                        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
-                    ) {
-
-                        // 🧑 PROFILE DP (LARGE) + CHANGE BUTTON
-                        Box(
-                            contentAlignment = Alignment.BottomEnd
+                    // 👤 PROFILE HEADER (DP + NAME)
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 24.dp, bottom = 12.dp),
+                            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
                         ) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(context)
-                                    .data("${ApiClient.BASE_URL}/dp/$username")
-                                    .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
-                                    .allowHardware(false)
-                                    .build(),
-                                contentDescription = "Profile Picture",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .clip(CircleShape)
+
+                            // 🧑 PROFILE DP (LARGE) + CHANGE BUTTON
+                            Box(
+                                contentAlignment = Alignment.BottomEnd
+                            ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data("${ApiClient.BASE_URL}/dp/$username")
+                                        .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                        .allowHardware(false)
+                                        .build(),
+                                    contentDescription = "Profile Picture",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .clip(CircleShape)
+                                )
+
+                                // ✅ SHOW ONLY ON MY OWN PROFILE
+                                if (username == currentUsername) {
+                                    IconButton(
+                                        enabled = !isPickingDp && !uploadingDp,
+                                        onClick = {
+                                            if (!isPickingDp && !uploadingDp) {
+                                                isPickingDp = true
+                                                pickDpLauncher.launch("image/*")
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.primary)
+                                    ) {
+                                        if (uploadingDp) {
+                                            CircularProgressIndicator(
+                                                strokeWidth = 2.dp,
+                                                modifier = Modifier.size(18.dp),
+                                                color = MaterialTheme.colorScheme.onPrimary
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Default.Edit,
+                                                contentDescription = "Change Photo",
+                                                tint = MaterialTheme.colorScheme.onPrimary,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            val pronoun = when (sex) {
+                                "Male" -> "he"
+                                "Female" -> "she"
+                                else -> null
+                            }
+
+                            val metaText = when {
+                                age != null && pronoun != null -> "$age, $pronoun"
+                                age != null -> "$age"
+                                pronoun != null -> pronoun
+                                else -> null
+                            }
+
+                            Text(
+                                if (metaText != null) "$displayName ($metaText)" else displayName,
+                                style = MaterialTheme.typography.titleLarge
                             )
 
-                            // ✅ SHOW ONLY ON MY OWN PROFILE
-                            if (username == currentUsername) {
-                                IconButton(
-                                    enabled = !isPickingDp && !uploadingDp,
+                            Text(
+                                "@$username",
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                            // ➕ ADD FRIEND BUTTON (SAFE + NO FLICKER)
+                            if (
+                                !loading &&
+                                username != currentUsername &&
+                                !friends.contains(currentUsername)
+                            ) {
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Button(
+                                    enabled = !sendingFriendReq,
                                     onClick = {
-                                        if (!isPickingDp && !uploadingDp) {
-                                            isPickingDp = true
-                                            pickDpLauncher.launch("image/*")
+                                        sendingFriendReq = true
+
+                                        scope.launch {
+                                            val result = withContext(Dispatchers.IO) {
+                                                AuthApi.sendFriendRequest(username)
+                                            }
+
+                                            friendReqStatus = result
+                                            sendingFriendReq = false
                                         }
-                                    },
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primary)
+                                    }
                                 ) {
-                                    if (uploadingDp) {
+                                    if (sendingFriendReq) {
                                         CircularProgressIndicator(
                                             strokeWidth = 2.dp,
-                                            modifier = Modifier.size(18.dp),
-                                            color = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Default.Edit,
-                                            contentDescription = "Change Photo",
-                                            tint = MaterialTheme.colorScheme.onPrimary,
                                             modifier = Modifier.size(18.dp)
                                         )
+                                    } else {
+                                        Text("Add Friend")
                                     }
                                 }
-                            }
-                        }
 
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        val pronoun = when (sex) {
-                            "Male" -> "he"
-                            "Female" -> "she"
-                            else -> null
-                        }
-
-                        val metaText = when {
-                            age != null && pronoun != null -> "$age, $pronoun"
-                            age != null -> "$age"
-                            pronoun != null -> pronoun
-                            else -> null
-                        }
-
-                        Text(
-                            if (metaText != null) "$displayName ($metaText)" else displayName,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-
-                        Text(
-                            "@$username",
-                            color = MaterialTheme.colorScheme.primary
-                        )
-
-                        // ➕ ADD FRIEND BUTTON (SAFE + NO FLICKER)
-                        if (
-                            !loading &&
-                            username != currentUsername &&
-                            !friends.contains(currentUsername)
-                        ) {
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Button(
-                                enabled = !sendingFriendReq,
-                                onClick = {
-                                    sendingFriendReq = true
-
-                                    scope.launch {
-                                        val result = withContext(Dispatchers.IO) {
-                                            AuthApi.sendFriendRequest(username)
-                                        }
-
-                                        friendReqStatus = result
-                                        sendingFriendReq = false
-                                    }
-                                }
-                            ) {
-                                if (sendingFriendReq) {
-                                    CircularProgressIndicator(
-                                        strokeWidth = 2.dp,
-                                        modifier = Modifier.size(18.dp)
+                                // 📩 STATUS MESSAGE (same as web)
+                                if (friendReqStatus != null) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        friendReqStatus!!,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
-                                } else {
-                                    Text("Add Friend")
                                 }
                             }
 
-                            // 📩 STATUS MESSAGE (same as web)
-                            if (friendReqStatus != null) {
+                            if (!contact.isNullOrBlank()) {
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    friendReqStatus!!,
+                                    contact!!,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                        }
 
-                        if (!contact.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(4.dp))
+                            if (friends.isNotEmpty()) {
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                // 🔽 FRIENDS HEADER (CLICKABLE)
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { friendsExpanded = !friendsExpanded }
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+
+                                    Text(
+                                        text = if (friendsExpanded)
+                                            "▼ Friends (${friends.size})"
+                                        else
+                                            "▶ Friends (${friends.size})",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                // 👥 FRIEND LIST (ONLY WHEN EXPANDED)
+                                if (friendsExpanded) {
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    friends.forEach { friendUname ->
+
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 6.dp)
+                                                .clickable {
+                                                    onOpenProfile(friendUname)   // ✅ open friend profile
+                                                },
+                                            horizontalArrangement = Arrangement.Center,
+                                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                                        ) {
+
+                                            // 🧱 FIXED DP COLUMN
+                                            Box(
+                                                modifier = Modifier.width(36.dp),
+                                                contentAlignment = androidx.compose.ui.Alignment.Center
+                                            ) {
+                                                AsyncImage(
+                                                    model = ImageRequest.Builder(context)
+                                                        .data("${ApiClient.BASE_URL}/dp/$friendUname")
+                                                        .addHeader(
+                                                            "Cookie",
+                                                            ApiClient.getCookieHeader() ?: ""
+                                                        )
+                                                        .allowHardware(false)
+                                                        .build(),
+                                                    contentDescription = null,
+                                                    contentScale = ContentScale.Crop,
+                                                    modifier = Modifier
+                                                        .size(28.dp)
+                                                        .clip(CircleShape)
+                                                )
+                                            }
+
+                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                            // 🧱 FIXED NAME COLUMN
+                                            Box(
+                                                modifier = Modifier.width(140.dp),
+                                                contentAlignment = androidx.compose.ui.Alignment.CenterStart
+                                            ) {
+                                                Text(
+                                                    text = "@$friendUname",
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Divider(modifier = Modifier.padding(top = 16.dp))
+                        }
+                    }
+
+                    // ⏳ LOADING
+                    if (loading) {
+                        item {
                             Text(
-                                contact!!,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                "Loading profile...",
+                                modifier = Modifier.padding(16.dp)
                             )
                         }
+                    }
 
-                        if (friends.isNotEmpty()) {
+                    // 📰 POSTS
+                    items(posts, key = { it._id }) { post ->
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                        val commentText = commentTexts[post._id] ?: ""
 
-                            // 🔽 FRIENDS HEADER (CLICKABLE)
+                        Column(modifier = Modifier.padding(16.dp)) {
+
+                            // 🔹 POST HEADER (DP + NAME)
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { friendsExpanded = !friendsExpanded }
-                                    .padding(vertical = 8.dp),
-                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
+                                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                             ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data("${ApiClient.BASE_URL}/dp/${post.uname}")
+                                        .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                        .allowHardware(false)
+                                        .build(),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                )
+
+                                Spacer(modifier = Modifier.width(8.dp))
 
                                 Text(
-                                    text = if (friendsExpanded)
-                                        "▼ Friends (${friends.size})"
-                                    else
-                                        "▶ Friends (${friends.size})",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    "${post.fName} ${post.lName}",
+                                    style = MaterialTheme.typography.titleMedium
                                 )
                             }
 
-                            // 👥 FRIEND LIST (ONLY WHEN EXPANDED)
-                            if (friendsExpanded) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(post.content)
 
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                friends.forEach { friendUname ->
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 6.dp)
-                                            .clickable {
-                                                onOpenProfile(friendUname)   // ✅ open friend profile
-                                            },
-                                        horizontalArrangement = Arrangement.Center,
-                                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                                    ) {
-
-                                        // 🧱 FIXED DP COLUMN
-                                        Box(
-                                            modifier = Modifier.width(36.dp),
-                                            contentAlignment = androidx.compose.ui.Alignment.Center
-                                        ) {
-                                            AsyncImage(
-                                                model = ImageRequest.Builder(context)
-                                                    .data("${ApiClient.BASE_URL}/dp/$friendUname")
-                                                    .addHeader(
-                                                        "Cookie",
-                                                        ApiClient.getCookieHeader() ?: ""
-                                                    )
-                                                    .allowHardware(false)
-                                                    .build(),
-                                                contentDescription = null,
-                                                contentScale = ContentScale.Crop,
-                                                modifier = Modifier
-                                                    .size(28.dp)
-                                                    .clip(CircleShape)
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.width(8.dp))
-
-                                        // 🧱 FIXED NAME COLUMN
-                                        Box(
-                                            modifier = Modifier.width(140.dp),
-                                            contentAlignment = androidx.compose.ui.Alignment.CenterStart
-                                        ) {
-                                            Text(
-                                                text = "@$friendUname",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.primary,
-                                                maxLines = 1
-                                            )
-                                        }
-                                    }
-                                }
+                            // 🖼 POST IMAGE
+                            if (!post.image.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data("${ApiClient.BASE_URL}/pics/${post.image}")
+                                        .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                        .allowHardware(false)
+                                        .build(),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(250.dp)
+                                )
                             }
-                        }
 
-                        Divider(modifier = Modifier.padding(top = 16.dp))
-                    }
-                }
+                            Spacer(modifier = Modifier.height(4.dp))
 
-                // ⏳ LOADING
-                if (loading) {
-                    item {
-                        Text(
-                            "Loading profile...",
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                }
-
-                // 📰 POSTS
-                items(posts, key = { it._id }) { post ->
-
-                    val commentText = commentTexts[post._id] ?: ""
-
-                    Column(modifier = Modifier.padding(16.dp)) {
-
-                        // 🔹 POST HEADER (DP + NAME)
-                        Row(
-                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                        ) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(context)
-                                    .data("${ApiClient.BASE_URL}/dp/${post.uname}")
-                                    .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
-                                    .allowHardware(false)
-                                    .build(),
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                            )
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
+                            // 🕒 DATE
                             Text(
-                                "${post.fName} ${post.lName}",
-                                style = MaterialTheme.typography.titleMedium
+                                formatPostDate(post.createdAt),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                        }
 
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(post.content)
-
-                        // 🖼 POST IMAGE
-                        if (!post.image.isNullOrBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
-                            AsyncImage(
-                                model = ImageRequest.Builder(context)
-                                    .data("${ApiClient.BASE_URL}/pics/${post.image}")
-                                    .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
-                                    .allowHardware(false)
-                                    .build(),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(250.dp)
-                            )
-                        }
 
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        // 🕒 DATE
-                        Text(
-                            formatPostDate(post.createdAt),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // 💬 COMMENTS
-                        post.comments.forEach {
-                            Text(
-                                "${it.commenter}: ${it.commentContent}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // ➕ ADD COMMENT
-                        OutlinedTextField(
-                            value = commentText,
-                            onValueChange = { commentTexts[post._id] = it },
-                            label = { Text("Write a comment") },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Button(
-                            enabled = commentText.isNotBlank(),
-                            onClick = {
-                                scope.launch {
-                                    withContext(Dispatchers.IO) {
-                                        AuthApi.addComment(
-                                            postId = post._id,
-                                            commenter = currentUserFullName,
-                                            commentContent = commentText
-                                        )
-                                    }
-                                    commentTexts[post._id] = ""
-                                    loadProfile()
-                                }
+                            // 💬 COMMENTS
+                            post.comments.forEach {
+                                Text(
+                                    "${it.commenter}: ${it.commentContent}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
                             }
-                        ) {
-                            Text("Comment")
-                        }
 
-                        Divider(modifier = Modifier.padding(vertical = 12.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // ➕ ADD COMMENT
+                            OutlinedTextField(
+                                value = commentText,
+                                onValueChange = { commentTexts[post._id] = it },
+                                label = { Text("Write a comment") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Button(
+                                enabled = commentText.isNotBlank(),
+                                onClick = {
+                                    scope.launch {
+                                        withContext(Dispatchers.IO) {
+                                            AuthApi.addComment(
+                                                postId = post._id,
+                                                commenter = currentUserFullName,
+                                                commentContent = commentText
+                                            )
+                                        }
+                                        commentTexts[post._id] = ""
+                                        loadProfile()
+                                    }
+                                }
+                            ) {
+                                Text("Comment")
+                            }
+
+                            Divider(modifier = Modifier.padding(vertical = 12.dp))
+                        }
                     }
                 }
             }
+        }
+
+        ChatFab {
+            onOpenChat()
         }
     }
 }
