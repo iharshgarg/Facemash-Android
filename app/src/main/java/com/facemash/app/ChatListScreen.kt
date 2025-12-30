@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.layout.ContentScale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,15 +83,13 @@ fun ChatListScreen(
                         AsyncImage(
                             model = ImageRequest.Builder(context)
                                 .data("${ApiClient.BASE_URL}/dp/$friend")
-                                .addHeader(
-                                    "Cookie",
-                                    ApiClient.getCookieHeader() ?: ""
-                                )
+                                .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
                                 .allowHardware(false)
                                 .build(),
                             contentDescription = null,
+                            contentScale = ContentScale.Crop,   // ✅ IMPORTANT
                             modifier = Modifier
-                                .size(42.dp)
+                                .size(48.dp)
                                 .clip(CircleShape)
                         )
 

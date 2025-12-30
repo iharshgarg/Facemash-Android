@@ -10,23 +10,25 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Alignment
 
 @Composable
-fun ChatFab(
-    onClick: () -> Unit
-) {
+fun ChatFab(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         contentAlignment = Alignment.BottomEnd
     ) {
-        FloatingActionButton(
+        ExtendedFloatingActionButton(
             onClick = onClick,
-            containerColor = MaterialTheme.colorScheme.primary
-        ) {
-            Icon(
-                imageVector = Icons.Default.Chat,
-                contentDescription = "Chat"
-            )
-        }
+            containerColor = MaterialTheme.colorScheme.primary,
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Chat,
+                    contentDescription = "Chat"
+                )
+            },
+            text = {
+                Text("Chat")
+            }
+        )
     }
 }
