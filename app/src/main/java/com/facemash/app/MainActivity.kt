@@ -154,9 +154,10 @@ class MainActivity : ComponentActivity() {
                                 chattingWith != null -> {
                                     ChatScreen(
                                         friendUsername = chattingWith!!,
+                                        currentUsername = currentUsername,
                                         onBack = {
                                             chattingWith = null
-                                            showChatList = true   // 👈 THIS IS THE KEY
+                                            showChatList = true
                                         }
                                     )
                                 }

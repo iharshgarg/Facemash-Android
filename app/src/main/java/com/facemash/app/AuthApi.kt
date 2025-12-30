@@ -484,4 +484,35 @@ object AuthApi {
             return users
         }
     }
+
+    fun fetchConversation(friendUsername: String): List<ChatMessage> {
+
+        val request = okhttp3.Request.Builder()
+            .url("${ApiClient.BASE_URL}/conversation/$friendUsername")
+            .get()
+            .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+            .build()
+
+        ApiClient.client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) return emptyList()
+
+            val body = response.body?.string() ?: return emptyList()
+            val json = org.json.JSONObject(body)
+            val messagesArray = json.getJSONArray("messages")
+
+            val messages = mutableListOf<ChatMessage>()
+
+            for (i in 0 until messagesArray.length()) {
+                val obj = messagesArray.getJSONObject(i)
+                messages.add(
+                    ChatMessage(
+                        sender = obj.getString("sender"),
+                        content = obj.getString("content"),
+                        timestamp = obj.getString("timestamp")
+                    )
+                )
+            }
+            return messages
+        }
+    }
 }
