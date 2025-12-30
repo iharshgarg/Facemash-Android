@@ -150,6 +150,17 @@ class MainActivity : ComponentActivity() {
                         } else {
 
                             when {
+
+                                chattingWith != null -> {
+                                    ChatScreen(
+                                        friendUsername = chattingWith!!,
+                                        onBack = {
+                                            chattingWith = null
+                                            showChatList = true   // 👈 THIS IS THE KEY
+                                        }
+                                    )
+                                }
+
                                 showChatList -> {
                                     ChatListScreen(
                                         onBack = { showChatList = false },
@@ -157,13 +168,6 @@ class MainActivity : ComponentActivity() {
                                             chattingWith = friendUname
                                             showChatList = false
                                         }
-                                    )
-                                }
-
-                                chattingWith != null -> {
-                                    ChatScreen(
-                                        friendUsername = chattingWith!!,
-                                        onBack = { chattingWith = null }
                                     )
                                 }
 
