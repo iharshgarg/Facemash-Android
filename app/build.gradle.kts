@@ -45,9 +45,6 @@ android {
 }
 
 dependencies {
-    implementation("io.socket:socket.io-client:2.1.0") {
-        exclude(group = "org.json", module = "json")
-    }
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.accompanist:accompanist-swiperefresh:0.34.0")
     implementation("io.coil-kt:coil-compose:2.5.0")
