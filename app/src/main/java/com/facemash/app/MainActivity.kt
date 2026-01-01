@@ -199,6 +199,7 @@ class MainActivity : ComponentActivity() {
                                             showSearch = false
                                         },
                                         onLogout = {
+                                            SocketManager.disconnect()
                                             ApiClient.clearCookies()
                                             isLoggedIn = false
                                             viewingProfile = null
@@ -214,6 +215,7 @@ class MainActivity : ComponentActivity() {
                                         currentUserFirstName = currentUserFirstName,
                                         currentUserFullName = currentUserFullName,
                                         onLogout = {
+                                            SocketManager.disconnect()
                                             ApiClient.clearCookies()
                                             isLoggedIn = false
                                         },

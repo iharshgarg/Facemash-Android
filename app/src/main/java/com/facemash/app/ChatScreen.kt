@@ -27,8 +27,8 @@ fun ChatScreen(
     currentUsername: String,
     onBack: () -> Unit
 ) {
-
     var messages by remember { mutableStateOf<List<ChatMessage>>(emptyList()) }
+    var input by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(true) }
 
     val listState = rememberLazyListState()
@@ -42,12 +42,32 @@ fun ChatScreen(
         loading = false
     }
 
-    // 🔹 AUTO SCROLL TO BOTTOM
+    // 🔹 SOCKET SETUP
+    LaunchedEffect(friendUsername) {
+        SocketManager.connect()
+
+        SocketManager.onMessage { msg ->
+            // 🔒 STRICT FILTER
+            if (
+                msg.sender == friendUsername ||
+                msg.sender == currentUsername
+            ) {
+                messages = messages + msg
+            }
+        }
+    }
+
+    // 🔹 CLEANUP (VERY IMPORTANT)
+    DisposableEffect(Unit) {
+        onDispose {
+            SocketManager.clearListeners()
+        }
+    }
+
+    // 🔹 AUTO SCROLL
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            scope.launch {
-                listState.animateScrollToItem(messages.lastIndex)
-            }
+            listState.animateScrollToItem(messages.lastIndex)
         }
     }
 
@@ -74,12 +94,11 @@ fun ChatScreen(
 
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
+                .weight(1f)
                 .padding(12.dp),
             state = listState
         ) {
             items(messages) { msg ->
-
                 val isMe = msg.sender == currentUsername
 
                 Row(
@@ -93,14 +112,44 @@ fun ChatScreen(
                         tonalElevation = 2.dp
                     ) {
                         Text(
-                            text = msg.content,
-                            modifier = Modifier
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                            msg.content,
+                            modifier = Modifier.padding(10.dp)
                         )
                     }
                 }
-
                 Spacer(modifier = Modifier.height(6.dp))
+            }
+        }
+
+        // ✉️ INPUT BAR
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = input,
+                onValueChange = { input = it },
+                modifier = Modifier.weight(1f),
+                placeholder = { Text("Message…") }
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Button(
+                enabled = input.isNotBlank(),
+                onClick = {
+                    val msg = input.trim()
+                    input = ""
+
+                    SocketManager.sendMessage(
+                        to = friendUsername,
+                        content = msg
+                    )
+                }
+            ) {
+                Text("Send")
             }
         }
     }
