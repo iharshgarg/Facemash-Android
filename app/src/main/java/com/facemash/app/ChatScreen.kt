@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.launch
 
 // 🎨 OG Facebook bubble colors
 private val MyBubbleColor = Color(0xFFDCF0FF)     // light blue
@@ -27,14 +26,14 @@ fun ChatScreen(
     currentUsername: String,
     onBack: () -> Unit
 ) {
+
     var messages by remember { mutableStateOf<List<ChatMessage>>(emptyList()) }
     var input by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(true) }
 
     val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
 
-    // 🔹 LOAD HISTORY
+    /* -------------------- LOAD HISTORY -------------------- */
     LaunchedEffect(friendUsername) {
         messages = withContext(Dispatchers.IO) {
             AuthApi.fetchConversation(friendUsername)
@@ -42,12 +41,10 @@ fun ChatScreen(
         loading = false
     }
 
-    // 🔹 SOCKET SETUP
-    LaunchedEffect(friendUsername) {
-        SocketManager.connect()
-
-        SocketManager.onMessage { msg ->
-            // 🔒 STRICT FILTER
+    /* -------------------- SOCKET LISTENER (SCOPED) -------------------- */
+    val socketListener: (ChatMessage) -> Unit = remember(friendUsername) {
+        { msg ->
+            // 🔒 STRICT FILTER — ONLY THIS CONVERSATION
             if (
                 msg.sender == friendUsername ||
                 msg.sender == currentUsername
@@ -57,27 +54,28 @@ fun ChatScreen(
         }
     }
 
-    // 🔹 CLEANUP (VERY IMPORTANT)
-    DisposableEffect(Unit) {
+    DisposableEffect(friendUsername) {
+        SocketManager.addMessageListener(socketListener)
         onDispose {
-            SocketManager.clearListeners()
+            SocketManager.removeMessageListener(socketListener)
         }
     }
 
-    // 🔹 AUTO SCROLL
+    /* -------------------- AUTO SCROLL -------------------- */
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.lastIndex)
         }
     }
 
+    /* -------------------- UI -------------------- */
     Column(modifier = Modifier.fillMaxSize()) {
 
         TopAppBar(
             title = { Text(friendUsername) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, "Back")
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                 }
             }
         )
@@ -112,22 +110,24 @@ fun ChatScreen(
                         tonalElevation = 2.dp
                     ) {
                         Text(
-                            msg.content,
-                            modifier = Modifier.padding(10.dp)
+                            text = msg.content,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                         )
                     }
                 }
+
                 Spacer(modifier = Modifier.height(6.dp))
             }
         }
 
-        // ✉️ INPUT BAR
+        /* -------------------- INPUT BAR -------------------- */
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+
             OutlinedTextField(
                 value = input,
                 onValueChange = { input = it },
@@ -140,12 +140,12 @@ fun ChatScreen(
             Button(
                 enabled = input.isNotBlank(),
                 onClick = {
-                    val msg = input.trim()
+                    val text = input.trim()
                     input = ""
 
                     SocketManager.sendMessage(
                         to = friendUsername,
-                        content = msg
+                        content = text
                     )
                 }
             ) {

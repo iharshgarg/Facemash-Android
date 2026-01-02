@@ -9,7 +9,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
 import com.facemash.app.ui.theme.FacemashTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,9 +19,7 @@ class MainActivity : ComponentActivity() {
         ApiClient.init(applicationContext)
 
         setContent {
-            FacemashTheme(
-                dynamicColor = false
-            ) {
+            FacemashTheme(dynamicColor = false) {
 
                 /* -------------------- GLOBAL APP STATE -------------------- */
 
@@ -45,7 +42,6 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(Unit) {
                     while (true) {
                         try {
-                            // 1️⃣ Internet check
                             val hasInternet = withContext(Dispatchers.IO) {
                                 NetworkChecker.hasInternet()
                             }
@@ -55,7 +51,6 @@ class MainActivity : ComponentActivity() {
                                 continue
                             }
 
-                            // 2️⃣ Server heartbeat
                             val serverUp = withContext(Dispatchers.IO) {
                                 NetworkChecker.isServerUp()
                             }
@@ -65,7 +60,6 @@ class MainActivity : ComponentActivity() {
                                 continue
                             }
 
-                            // 3️⃣ Session check
                             val sessionResult = withContext(Dispatchers.IO) {
                                 AuthApi.checkSession()
                             }
@@ -90,7 +84,7 @@ class MainActivity : ComponentActivity() {
                             }
 
                             appStatus = AppStatus.Online
-                            break   // ✅ STOP retry loop once online
+                            break
 
                         } catch (e: Exception) {
                             appStatus = AppStatus.ServerDown
@@ -99,30 +93,28 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                /* -------------------- SOCKET LIFECYCLE -------------------- */
+
+                LaunchedEffect(isLoggedIn) {
+                    if (isLoggedIn) {
+                        SocketManager.connect()
+                    }
+                }
+
                 /* -------------------- UI STATE MACHINE -------------------- */
 
                 when (appStatus) {
 
-                    AppStatus.Loading -> {
-                        CenterText("Checking connectivity…")
-                    }
-
-                    AppStatus.NoInternet -> {
-                        CenterText("You are not connected to internet!")
-                    }
-
-                    AppStatus.ServerDown -> {
-                        CenterText("Facemash server is booting up, please wait…")
-                    }
+                    AppStatus.Loading -> CenterText("Checking connectivity…")
+                    AppStatus.NoInternet -> CenterText("You are not connected to internet!")
+                    AppStatus.ServerDown -> CenterText("Facemash server is booting up, please wait…")
 
                     AppStatus.Online -> {
 
                         if (!isLoggedIn) {
 
                             if (showSignup) {
-                                SignupScreen {
-                                    showSignup = false
-                                }
+                                SignupScreen { showSignup = false }
                             } else {
                                 LoginScreen(
                                     onLoginSuccess = { sessionData ->
@@ -157,7 +149,7 @@ class MainActivity : ComponentActivity() {
                                         currentUsername = currentUsername,
                                         onBack = {
                                             chattingWith = null
-                                            showChatList = true   // ✅ THIS IS THE FIX
+                                            showChatList = true
                                         }
                                     )
                                 }
@@ -165,8 +157,8 @@ class MainActivity : ComponentActivity() {
                                 showChatList -> {
                                     ChatListScreen(
                                         onBack = { showChatList = false },
-                                        onOpenChat = { friendUname ->
-                                            chattingWith = friendUname
+                                        onOpenChat = { friend ->
+                                            chattingWith = friend
                                             showChatList = false
                                         }
                                     )
@@ -219,12 +211,8 @@ class MainActivity : ComponentActivity() {
                                             ApiClient.clearCookies()
                                             isLoggedIn = false
                                         },
-                                        onOpenProfile = { uname ->
-                                            viewingProfile = uname
-                                        },
-                                        onOpenSearch = {
-                                            showSearch = true
-                                        },
+                                        onOpenProfile = { uname -> viewingProfile = uname },
+                                        onOpenSearch = { showSearch = true },
                                         onOpenChat = { showChatList = true }
                                     )
                                 }
@@ -242,9 +230,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun CenterText(text: String) {
     Surface {
-        Box(
-            contentAlignment = Alignment.Center
-        ) {
+        Box(contentAlignment = Alignment.Center) {
             Text(text)
         }
     }
