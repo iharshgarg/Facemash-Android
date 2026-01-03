@@ -20,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.layout.ContentScale
 
+private val FacebookBlue = androidx.compose.ui.graphics.Color(0xFF3B5998)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatListScreen(
@@ -50,17 +52,31 @@ fun ChatListScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        TopAppBar(
-            title = { Text("Chats") },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back"
+        Surface(
+            color = FacebookBlue,
+            shadowElevation = 6.dp
+        ) {
+            TopAppBar(
+                title = {
+                    Text(
+                        "Chats",
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
-                }
-            }
-        )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = FacebookBlue
+                )
+            )
+        }
 
         if (loading) {
             Box(
