@@ -150,6 +150,7 @@ fun ChatScreen(
                         if (isMe) Arrangement.End else Arrangement.Start
                 ) {
                     Surface(
+                        modifier = Modifier.widthIn(max = 260.dp), // 👈 KEY FIX
                         color = if (isMe) MyBubbleColor else FriendBubbleColor,
                         shape = MaterialTheme.shapes.medium,
                         tonalElevation = 2.dp
