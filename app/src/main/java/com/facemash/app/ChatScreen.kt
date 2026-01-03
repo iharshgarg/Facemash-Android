@@ -14,6 +14,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
 
 // 🎨 OG Facebook bubble colors
 private val MyBubbleColor = Color(0xFFDCF0FF)     // light blue
@@ -34,6 +40,7 @@ fun ChatScreen(
     var loading by remember { mutableStateOf(true) }
 
     val listState = rememberLazyListState()
+    val context = LocalContext.current
 
     /* -------------------- LOAD HISTORY -------------------- */
     LaunchedEffect(friendUsername) {
@@ -79,10 +86,29 @@ fun ChatScreen(
         ) {
             TopAppBar(
                 title = {
-                    Text(
-                        text = friendUsername,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(context)
+                                .data("${ApiClient.BASE_URL}/dp/$friendUsername")
+                                .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
+                                .allowHardware(false)
+                                .build(),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = friendUsername,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
