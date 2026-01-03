@@ -19,6 +19,8 @@ import kotlinx.coroutines.withContext
 private val MyBubbleColor = Color(0xFFDCF0FF)     // light blue
 private val FriendBubbleColor = Color(0xFFF0F0F0) // light gray
 
+private val FacebookBlue = Color(0xFF3B5998)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
@@ -71,14 +73,31 @@ fun ChatScreen(
     /* -------------------- UI -------------------- */
     Column(modifier = Modifier.fillMaxSize()) {
 
-        TopAppBar(
-            title = { Text(friendUsername) },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                }
-            }
-        )
+        Surface(
+            color = FacebookBlue,
+            shadowElevation = 6.dp
+        ) {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = friendUsername,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = FacebookBlue
+                )
+            )
+        }
 
         if (loading) {
             Box(
