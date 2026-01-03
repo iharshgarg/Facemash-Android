@@ -42,6 +42,7 @@ fun ChatListScreen(
                 ?.groupValues?.get(1)
                 ?.split(",")
                 ?.map { it.trim().replace("\"", "") }
+                ?.reversed()
                 ?: emptyList()
 
         loading = false
