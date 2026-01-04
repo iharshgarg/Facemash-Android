@@ -43,7 +43,13 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
     val scrollState = rememberScrollState()
 
     /* ───── DATE PICKER STATE ───── */
-    val datePickerState = rememberDatePickerState()
+    val datePickerState = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis <= System.currentTimeMillis()
+            }
+        }
+    )
     var showDatePicker by remember { mutableStateOf(false) }
 
     if (showDatePicker) {
