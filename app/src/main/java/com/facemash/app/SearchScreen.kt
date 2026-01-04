@@ -19,6 +19,7 @@ import kotlinx.coroutines.withContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
+import androidx.activity.compose.BackHandler
 @Composable
 fun SearchScreen(
     onUserClick: (String) -> Unit,
@@ -30,6 +31,10 @@ fun SearchScreen(
     var query by remember { mutableStateOf("") }
     var results by remember { mutableStateOf<List<UserSearchResult>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
+
+    BackHandler {
+        onBack()
+    }
 
     // 🔑 Auto-focus search field
     LaunchedEffect(Unit) {

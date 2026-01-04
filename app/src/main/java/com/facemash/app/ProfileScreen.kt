@@ -30,6 +30,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import androidx.activity.compose.BackHandler
 
 @Composable
 fun ProfileScreen(
@@ -44,6 +45,10 @@ fun ProfileScreen(
     onOpenProfile: (String) -> Unit,
     onOpenChat: () -> Unit
 ) {
+
+    BackHandler {
+        onBack()
+    }
 
     val context = LocalContext.current
 
@@ -69,6 +74,7 @@ fun ProfileScreen(
     var uploadingDp by remember { mutableStateOf(false) }
     var selectedDpUri by remember { mutableStateOf<Uri?>(null) }
     var isPickingDp by remember { mutableStateOf(false) }
+
     val pickDpLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
