@@ -22,6 +22,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+
+private val MyBubbleShape = RoundedCornerShape(
+    topStart = 16.dp,
+    topEnd = 16.dp,
+    bottomStart = 16.dp,
+    bottomEnd = 4.dp     // 👈 point on right
+)
+
+private val FriendBubbleShape = RoundedCornerShape(
+    topStart = 16.dp,
+    topEnd = 16.dp,
+    bottomStart = 4.dp,  // 👈 point on left
+    bottomEnd = 16.dp
+)
+
 // 🎨 Calm, sober chat bubble colors
 private val MyBubbleColor = Color(0xFFD2E2F2)     // muted blue-gray
 private val FriendBubbleColor = Color(0xFFE8EAED) // soft neutral gray
@@ -163,7 +179,7 @@ fun ChatScreen(
                     Surface(
                         modifier = Modifier.widthIn(max = 260.dp), // 👈 KEY FIX
                         color = if (isMe) MyBubbleColor else FriendBubbleColor,
-                        shape = MaterialTheme.shapes.medium,
+                        shape = if (isMe) MyBubbleShape else FriendBubbleShape,
                         tonalElevation = 2.dp
                     ) {
                         Text(
