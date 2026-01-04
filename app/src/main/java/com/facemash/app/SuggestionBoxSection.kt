@@ -94,7 +94,7 @@ fun SuggestionBoxSection(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 32.dp), // height of ~2 lines
+                            .heightIn(min = 32.dp), // height of ~2 liness
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
