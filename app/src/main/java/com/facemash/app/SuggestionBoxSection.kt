@@ -95,6 +95,7 @@ fun SuggestionBoxSection(
                         text = "${user.fName} ${user.lName}",
                         style = MaterialTheme.typography.bodySmall,
                         maxLines = 2,
+                        minLines = 2,                 // ✅ KEY FIX
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
