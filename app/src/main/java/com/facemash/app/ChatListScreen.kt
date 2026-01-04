@@ -1,5 +1,6 @@
 package com.facemash.app
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +20,7 @@ import kotlinx.coroutines.withContext
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.layout.ContentScale
+import androidx.activity.compose.BackHandler
 
 private val FacebookBlue = androidx.compose.ui.graphics.Color(0xFF3B5998)
 
@@ -31,6 +33,10 @@ fun ChatListScreen(
     val context = LocalContext.current
     var friends by remember { mutableStateOf<List<String>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
+
+    BackHandler {
+        onBack()
+    }
 
     LaunchedEffect(Unit) {
         val session = withContext(Dispatchers.IO) {

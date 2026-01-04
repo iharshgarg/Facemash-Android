@@ -21,7 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
-
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 private val MyBubbleShape = RoundedCornerShape(
@@ -60,6 +60,10 @@ fun ChatScreen(
 
     val listState = rememberLazyListState()
     val context = LocalContext.current
+
+    BackHandler {
+        onBack()
+    }
 
     /* -------------------- LOAD HISTORY -------------------- */
     LaunchedEffect(friendUsername) {
