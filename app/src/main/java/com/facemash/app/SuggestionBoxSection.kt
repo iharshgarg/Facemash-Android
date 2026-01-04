@@ -91,14 +91,19 @@ fun SuggestionBoxSection(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
-                    Text(
-                        text = "${user.fName} ${user.lName}",
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 2,
-                        minLines = 2,                 // ✅ KEY FIX
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 32.dp), // height of ~2 lines
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "${user.fName} ${user.lName}",
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 2,
+                            textAlign = TextAlign.Center
+                        )
+                    }
 
                     // ➕ ADD FRIEND (ONLY IF NOT FRIEND)
                     // ➕ ADD FRIEND (ONLY IF NOT FRIEND)
