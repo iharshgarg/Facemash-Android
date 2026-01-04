@@ -106,7 +106,6 @@ fun SuggestionBoxSection(
                     }
 
                     // ➕ ADD FRIEND (ONLY IF NOT FRIEND)
-                    // ➕ ADD FRIEND (ONLY IF NOT FRIEND)
                     if (!myFriends.contains(user.uname)) {
 
                         Spacer(modifier = Modifier.height(4.dp))
