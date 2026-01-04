@@ -22,9 +22,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 
-// 🎨 OG Facebook bubble colors
-private val MyBubbleColor = Color(0xFFDCF0FF)     // light blue
-private val FriendBubbleColor = Color(0xFFF0F0F0) // light gray
+// 🎨 Calm, sober chat bubble colors
+private val MyBubbleColor = Color(0xFFD2E2F2)     // muted blue-gray
+private val FriendBubbleColor = Color(0xFFE8EAED) // soft neutral gray
 
 private val FacebookBlue = Color(0xFF3B5998)
 
