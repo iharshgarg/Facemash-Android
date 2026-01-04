@@ -38,6 +38,7 @@ fun ChatScreen(
     var messages by remember { mutableStateOf<List<ChatMessage>>(emptyList()) }
     var input by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(true) }
+    var firstScrollDone by remember { mutableStateOf(false) }
 
     val listState = rememberLazyListState()
     val context = LocalContext.current
@@ -73,7 +74,14 @@ fun ChatScreen(
     /* -------------------- AUTO SCROLL -------------------- */
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.lastIndex)
+            if (!firstScrollDone) {
+                // 🚀 INSTANT scroll on first load
+                listState.scrollToItem(messages.lastIndex)
+                firstScrollDone = true
+            } else {
+                // ✨ Animate only for new messages
+                listState.animateScrollToItem(messages.lastIndex)
+            }
         }
     }
 
