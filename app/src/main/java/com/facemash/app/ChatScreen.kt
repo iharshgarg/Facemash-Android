@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 
 // 🎨 OG Facebook bubble colors
 private val MyBubbleColor = Color(0xFFDCF0FF)     // light blue
@@ -39,6 +40,7 @@ fun ChatScreen(
     var input by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(true) }
     var firstScrollDone by remember { mutableStateOf(false) }
+    var listViewportHeight by remember { mutableStateOf(0) }
 
     val listState = rememberLazyListState()
     val context = LocalContext.current
@@ -72,7 +74,7 @@ fun ChatScreen(
     }
 
     /* -------------------- AUTO SCROLL -------------------- */
-    LaunchedEffect(messages.size) {
+    LaunchedEffect(messages.size, listViewportHeight) {
         if (messages.isNotEmpty()) {
             if (!firstScrollDone) {
                 // 🚀 INSTANT scroll on first load
@@ -146,7 +148,8 @@ fun ChatScreen(
         LazyColumn(
             modifier = Modifier
                 .weight(1f)
-                .padding(12.dp),
+                .padding(12.dp)
+                .onSizeChanged { listViewportHeight = it.height },
             state = listState
         ) {
             items(messages) { msg ->
