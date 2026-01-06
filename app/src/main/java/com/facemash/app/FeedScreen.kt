@@ -24,7 +24,7 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
 fun FeedScreen(
-    currentUsername: String,          // ✅ uname (lion)
+    currentUsername: String,          // ✅ uname- (lion)
     currentUserFirstName: String,     // ✅ John
     currentUserFullName: String,      // ✅ John Lewes
     onLogout: () -> Unit,
