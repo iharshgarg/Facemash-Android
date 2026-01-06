@@ -1,5 +1,6 @@
 package com.facemash.app
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,15 +16,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
-import androidx.activity.compose.BackHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupScreen(onBackToLogin: () -> Unit) {
 
-    BackHandler {
-        onBackToLogin()
-    }
+    BackHandler { onBackToLogin() }
 
     var fName by remember { mutableStateOf("") }
     var lName by remember { mutableStateOf("") }
@@ -32,8 +30,9 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
     var pass by remember { mutableStateOf("") }
     var confirmPass by remember { mutableStateOf("") }
 
-    var dobDisplay by remember { mutableStateOf("") }   // DD-MM-YYYY (UI)
-    var dobBackend by remember { mutableStateOf("") }   // YYYY-MM-DD (API)
+    var dobDisplay by remember { mutableStateOf("") }   // DD-MM-YYYY
+    var dobBackend by remember { mutableStateOf("") }   // YYYY-MM-DD
+    var dobMillis by remember { mutableStateOf<Long?>(null) }
 
     var sex by remember { mutableStateOf("Male") }
     var message by remember { mutableStateOf("") }
@@ -46,37 +45,37 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
     val datePickerState = rememberDatePickerState(
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                return utcTimeMillis <= System.currentTimeMillis()
+                return utcTimeMillis <= System.currentTimeMillis() // ❌ no future DOB
             }
         }
     )
+
     var showDatePicker by remember { mutableStateOf(false) }
 
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        val millis = datePickerState.selectedDateMillis
-                        if (millis != null) {
-                            val date = Date(millis)
+                TextButton(onClick = {
+                    val millis = datePickerState.selectedDateMillis
+                    if (millis != null) {
+                        dobMillis = millis
+                        val date = Date(millis)
 
-                            // 🇮🇳 display format
-                            dobDisplay = SimpleDateFormat(
-                                "dd-MM-yyyy",
-                                Locale("en", "IN")
-                            ).format(date)
+                        dobDisplay = SimpleDateFormat(
+                            "dd-MM-yyyy",
+                            Locale("en", "IN")
+                        ).format(date)
 
-                            // 🔁 backend-safe format
-                            dobBackend = SimpleDateFormat(
-                                "yyyy-MM-dd",
-                                Locale.US
-                            ).format(date)
-                        }
-                        showDatePicker = false
+                        dobBackend = SimpleDateFormat(
+                            "yyyy-MM-dd",
+                            Locale.US
+                        ).format(date)
                     }
-                ) { Text("OK") }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
@@ -205,11 +204,18 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
                 val u = uname.trim()
                 val c = contact.trim()
 
+                val age = dobMillis?.let { calculateAge(it) } ?: 0
+
                 when {
                     f.isEmpty() || l.isEmpty() || u.isEmpty()
                             || c.isEmpty() || pass.isEmpty()
                             || dobBackend.isEmpty() -> {
                         message = "Please fill all fields"
+                        return@Button
+                    }
+
+                    age < 13 -> {
+                        message = "You must be at least 13 years old to use Facemash"
                         return@Button
                     }
 
@@ -228,7 +234,7 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
                         AuthApi.signup(
                             f, l, u, c,
                             pass,
-                            dobBackend, // ✅ YYYY-MM-DD
+                            dobBackend,
                             sex
                         )
                     }
@@ -251,4 +257,16 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
     }
+}
+
+/* ───── AGE CALCULATION ───── */
+private fun calculateAge(dobMillis: Long): Int {
+    val dob = Calendar.getInstance().apply { timeInMillis = dobMillis }
+    val today = Calendar.getInstance()
+
+    var age = today.get(Calendar.YEAR) - dob.get(Calendar.YEAR)
+    if (today.get(Calendar.DAY_OF_YEAR) < dob.get(Calendar.DAY_OF_YEAR)) {
+        age--
+    }
+    return age
 }
