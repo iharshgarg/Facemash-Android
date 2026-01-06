@@ -1,47 +1,50 @@
 package com.facemash.app
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 private val MyBubbleShape = RoundedCornerShape(
     topStart = 16.dp,
     topEnd = 16.dp,
     bottomStart = 16.dp,
-    bottomEnd = 4.dp     // 👈 point on right
+    bottomEnd = 4.dp
 )
 
 private val FriendBubbleShape = RoundedCornerShape(
     topStart = 16.dp,
     topEnd = 16.dp,
-    bottomStart = 4.dp,  // 👈 point on left
+    bottomStart = 4.dp,
     bottomEnd = 16.dp
 )
 
-// 🎨 Calm, sober chat bubble colors
-private val MyBubbleColor = Color(0xFFD2E2F2)     // muted blue-gray
-private val FriendBubbleColor = Color(0xFFE8EAED) // soft neutral gray
-
+private val MyBubbleColor = Color(0xFFD2E2F2)
+private val FriendBubbleColor = Color(0xFFE8EAED)
 private val FacebookBlue = Color(0xFF3B5998)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,10 +63,9 @@ fun ChatScreen(
 
     val listState = rememberLazyListState()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
-    BackHandler {
-        onBack()
-    }
+    BackHandler { onBack() }
 
     /* -------------------- LOAD HISTORY -------------------- */
     LaunchedEffect(friendUsername) {
@@ -73,10 +75,9 @@ fun ChatScreen(
         loading = false
     }
 
-    /* -------------------- SOCKET LISTENER (SCOPED) -------------------- */
+    /* -------------------- SOCKET LISTENER -------------------- */
     val socketListener: (ChatMessage) -> Unit = remember(friendUsername) {
         { msg ->
-            // 🔒 STRICT FILTER — ONLY THIS CONVERSATION
             if (
                 msg.sender == friendUsername ||
                 msg.sender == currentUsername
@@ -97,28 +98,34 @@ fun ChatScreen(
     LaunchedEffect(messages.size, listViewportHeight) {
         if (messages.isNotEmpty()) {
             if (!firstScrollDone) {
-                // 🚀 INSTANT scroll on first load
                 listState.scrollToItem(messages.lastIndex)
                 firstScrollDone = true
             } else {
-                // ✨ Animate only for new messages
                 listState.animateScrollToItem(messages.lastIndex)
             }
         }
     }
 
+    fun sendMessage() {
+        val text = input.trim()
+        if (text.isBlank()) return
+
+        input = ""
+        focusManager.clearFocus()
+
+        SocketManager.sendMessage(
+            to = friendUsername,
+            content = text
+        )
+    }
+
     /* -------------------- UI -------------------- */
     Column(modifier = Modifier.fillMaxSize()) {
 
-        Surface(
-            color = FacebookBlue,
-            shadowElevation = 6.dp
-        ) {
+        Surface(color = FacebookBlue, shadowElevation = 6.dp) {
             TopAppBar(
                 title = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         AsyncImage(
                             model = ImageRequest.Builder(context)
                                 .data("${ApiClient.BASE_URL}/dp/$friendUsername")
@@ -181,14 +188,14 @@ fun ChatScreen(
                         if (isMe) Arrangement.End else Arrangement.Start
                 ) {
                     Surface(
-                        modifier = Modifier.widthIn(max = 260.dp), // 👈 KEY FIX
+                        modifier = Modifier.widthIn(max = 260.dp),
                         color = if (isMe) MyBubbleColor else FriendBubbleColor,
                         shape = if (isMe) MyBubbleShape else FriendBubbleShape,
                         tonalElevation = 2.dp
                     ) {
                         Text(
                             text = msg.content,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(12.dp)
                         )
                     }
                 }
@@ -209,22 +216,22 @@ fun ChatScreen(
                 value = input,
                 onValueChange = { input = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("Message…") }
+                placeholder = { Text("Message…") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Send,
+                    keyboardType = KeyboardType.Text
+                ),
+                keyboardActions = KeyboardActions(
+                    onSend = { sendMessage() }
+                )
             )
 
             Spacer(modifier = Modifier.width(8.dp))
 
             Button(
                 enabled = input.isNotBlank(),
-                onClick = {
-                    val text = input.trim()
-                    input = ""
-
-                    SocketManager.sendMessage(
-                        to = friendUsername,
-                        content = text
-                    )
-                }
+                onClick = { sendMessage() }
             ) {
                 Text("Send")
             }
