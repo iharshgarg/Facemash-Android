@@ -32,6 +32,7 @@ fun FeedScreen(
     onOpenSearch: () -> Unit,
     onOpenChat: () -> Unit
 ) {
+    var showAbout by remember { mutableStateOf(false) }
 
     var posts by remember { mutableStateOf<List<Post>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
@@ -283,12 +284,36 @@ fun FeedScreen(
                             Divider(modifier = Modifier.padding(vertical = 12.dp))
                         }
                     }
+
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        TextButton(
+                            onClick = { showAbout = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp)
+                        ) {
+                            Text(
+                                text = "About Facemash",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
                 }
             }
         }
 
         ChatFab {
             onOpenChat()
+        }
+
+        if (showAbout) {
+            AboutFacemashSheet {
+                showAbout = false
+            }
         }
     }
 }
