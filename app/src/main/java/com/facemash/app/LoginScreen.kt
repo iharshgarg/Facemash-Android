@@ -2,11 +2,14 @@ package com.facemash.app
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -33,12 +36,25 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
 
-        Text(
-            text = "Facemash Login",
-            style = MaterialTheme.typography.headlineSmall
-        )
+        /* ───── LOGO + TITLE ROW ───── */
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.logo),
+                contentDescription = "Facemash Logo",
+                modifier = Modifier.size(36.dp)
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Text(
+                text = "Login to Facemash",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         OutlinedTextField(
             value = username,
@@ -100,7 +116,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 🔐 Privacy Policy (Play Store compliant)
+        /* 🔐 Privacy Policy (Play Store compliant) */
         TextButton(
             onClick = {
                 context.startActivity(
