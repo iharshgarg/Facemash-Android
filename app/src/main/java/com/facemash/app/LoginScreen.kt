@@ -4,13 +4,19 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.focus.FocusDirection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,6 +34,30 @@ fun LoginScreen(
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+
+    fun doLogin() {
+        if (loading) return
+
+        loading = true
+        message = "Logging in..."
+
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                AuthApi.login(username, password)
+            }
+
+            if (result.contains("successfully")) {
+                val session = withContext(Dispatchers.IO) {
+                    AuthApi.checkSession()
+                }
+                onLoginSuccess(session)
+            } else {
+                message = result
+                loading = false
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -36,10 +66,8 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
 
-        /* ───── LOGO + TITLE ROW ───── */
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        /* ───── LOGO + TITLE ───── */
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
                 painter = painterResource(id = R.drawable.logo),
                 contentDescription = "Facemash Logo",
@@ -56,46 +84,48 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        /* ───── USERNAME ───── */
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
             label = { Text("Username or Contact") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                keyboardType = KeyboardType.Text
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            )
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        /* ───── PASSWORD ───── */
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done,
+                keyboardType = KeyboardType.Password
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    focusManager.clearFocus()
+                    doLogin()
+                }
+            )
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             enabled = !loading,
-            onClick = {
-                loading = true
-                message = "Logging in..."
-
-                scope.launch {
-                    val result = withContext(Dispatchers.IO) {
-                        AuthApi.login(username, password)
-                    }
-
-                    if (result.contains("successfully")) {
-                        val session = withContext(Dispatchers.IO) {
-                            AuthApi.checkSession()
-                        }
-                        onLoginSuccess(session)
-                    } else {
-                        message = result
-                        loading = false
-                    }
-                }
-            },
+            onClick = { doLogin() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(if (loading) "Please wait..." else "Login")
@@ -116,7 +146,7 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        /* 🔐 Privacy Policy (Play Store compliant) */
+        /* 🔐 Privacy Policy */
         TextButton(
             onClick = {
                 context.startActivity(
