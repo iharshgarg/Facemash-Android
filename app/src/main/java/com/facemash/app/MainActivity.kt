@@ -105,9 +105,18 @@ class MainActivity : ComponentActivity() {
 
                 when (appStatus) {
 
-                    AppStatus.Loading -> CenterText("Checking connectivity…")
-                    AppStatus.NoInternet -> CenterText("You are not connected to internet!")
-                    AppStatus.ServerDown -> CenterText("Facemash server is booting up, please wait…")
+                    AppStatus.Loading -> {
+                        AppStatusScreen("Checking connectivity…")
+                    }
+
+                    AppStatus.NoInternet -> {
+                        AppStatusScreen("Waiting for internet connection…")
+                    }
+
+                    AppStatus.ServerDown -> {
+                        AppStatusScreen("Facemash server is starting up…")
+                    }
+
 
                     AppStatus.Online -> {
 
