@@ -516,6 +516,13 @@ fun ProfileScreen(
                             Divider(modifier = Modifier.padding(vertical = 12.dp))
                         }
                     }
+
+                    // 🔻 ACCOUNT ACTIONS (ONLY FOR OWN PROFILE)
+                    if (username == currentUsername) {
+                        item {
+                            AccountActionsSection()
+                        }
+                    }
                 }
             }
         }
