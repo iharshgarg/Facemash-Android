@@ -6,13 +6,20 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -44,6 +51,7 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     /* ───── DATE PICKER STATE ───── */
     val datePickerState = rememberDatePickerState(
@@ -61,8 +69,7 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    val millis = datePickerState.selectedDateMillis
-                    if (millis != null) {
+                    datePickerState.selectedDateMillis?.let { millis ->
                         dobMillis = millis
                         val date = Date(millis)
 
@@ -102,20 +109,32 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        /* ───── NAME ROW ───── */
+        /* ───── FIRST + LAST NAME ───── */
         Row {
             OutlinedTextField(
                 value = fName,
                 onValueChange = { fName = it },
                 label = { Text("First name") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions {
+                    focusManager.moveFocus(FocusDirection.Right)
+                }
             )
+
             Spacer(modifier = Modifier.width(8.dp))
+
             OutlinedTextField(
                 value = lName,
                 onValueChange = { lName = it },
                 label = { Text("Last name") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions {
+                    focusManager.moveFocus(FocusDirection.Down)
+                }
             )
         }
 
@@ -125,7 +144,12 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
             value = uname,
             onValueChange = { uname = it },
             label = { Text("Username") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions {
+                focusManager.moveFocus(FocusDirection.Down)
+            }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -134,31 +158,59 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
             value = contact,
             onValueChange = { contact = it },
             label = { Text("Email or Phone") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next,
+                keyboardType = KeyboardType.Email
+            ),
+            keyboardActions = KeyboardActions {
+                focusManager.moveFocus(FocusDirection.Down)
+            }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        /* ───── PASSWORD ROW ───── */
+        /* ───── PASSWORDS ───── */
         Row {
             OutlinedTextField(
                 value = pass,
                 onValueChange = { pass = it },
                 label = { Text("Password") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Next,
+                    keyboardType = KeyboardType.Password
+                ),
+                keyboardActions = KeyboardActions {
+                    focusManager.moveFocus(FocusDirection.Right)
+                }
             )
+
             Spacer(modifier = Modifier.width(8.dp))
+
             OutlinedTextField(
                 value = confirmPass,
                 onValueChange = { confirmPass = it },
                 label = { Text("Confirm") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Password
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { focusManager.clearFocus() }
+                )
             )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        /* ───── DOB PICKER ───── */
+        /* ───── DOB ───── */
         OutlinedTextField(
             value = dobDisplay,
             onValueChange = {},
@@ -167,17 +219,14 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
                 IconButton(onClick = { showDatePicker = true }) {
-                    Icon(
-                        imageVector = Icons.Default.DateRange,
-                        contentDescription = "Pick date"
-                    )
+                    Icon(Icons.Default.DateRange, contentDescription = null)
                 }
             }
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        /* ───── SEX ROW ───── */
+        /* ───── SEX ───── */
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioButton(
                 selected = sex == "Male",
@@ -197,8 +246,8 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
         Spacer(modifier = Modifier.height(14.dp))
 
         Button(
-            modifier = Modifier.fillMaxWidth(),
             enabled = !loading,
+            modifier = Modifier.fillMaxWidth(),
             onClick = {
 
                 val age = dobMillis?.let { calculateAge(it) } ?: 0
@@ -248,7 +297,7 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // 🔐 Privacy Policy acknowledgement
+        /* 🔐 PRIVACY POLICY */
         TextButton(
             onClick = {
                 context.startActivity(
@@ -260,7 +309,7 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
             }
         ) {
             Text(
-                text = "By continuing, you agree to our Privacy Policy",
+                "By continuing, you agree to our Privacy Policy",
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -273,8 +322,6 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
         TextButton(onClick = onBackToLogin) {
             Text("Already have an account? Login")
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
