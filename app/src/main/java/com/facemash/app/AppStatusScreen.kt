@@ -1,11 +1,14 @@
 package com.facemash.app
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
@@ -13,6 +16,26 @@ import androidx.compose.ui.unit.dp
 fun AppStatusScreen(
     message: String
 ) {
+    // trigger animation once
+    var visible by remember { mutableStateOf(false) }
+
+    // subtle fade values
+    val logoAlpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 800),
+        label = "logoFade"
+    )
+
+    val bottomAlpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 900, delayMillis = 200),
+        label = "bottomFade"
+    )
+
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+
     Surface {
         Box(
             modifier = Modifier.fillMaxSize()
@@ -20,7 +43,9 @@ fun AppStatusScreen(
 
             /* 🖼️ LOGO + TITLE — CENTER */
             Column(
-                modifier = Modifier.align(Alignment.Center),
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .alpha(logoAlpha),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
@@ -50,7 +75,8 @@ fun AppStatusScreen(
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 72.dp),
+                    .padding(bottom = 72.dp)
+                    .alpha(bottomAlpha),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
