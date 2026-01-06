@@ -16,20 +16,23 @@ import androidx.compose.ui.unit.dp
 fun AppStatusScreen(
     message: String
 ) {
-    // trigger animation once
     var visible by remember { mutableStateOf(false) }
 
-    // subtle fade values
+    // 🖼️ Logo + title: appear immediately
     val logoAlpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(durationMillis = 800),
-        label = "logoFade"
+        animationSpec = tween(durationMillis = 0),
+        label = "logoAlpha"
     )
 
+    // 🔄 Loader + status: subtle delayed fade
     val bottomAlpha by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
-        animationSpec = tween(durationMillis = 900, delayMillis = 200),
-        label = "bottomFade"
+        animationSpec = tween(
+            durationMillis = 600,
+            delayMillis = 400
+        ),
+        label = "bottomAlpha"
     )
 
     LaunchedEffect(Unit) {
