@@ -1,9 +1,12 @@
 package com.facemash.app
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,6 +24,7 @@ fun LoginScreen(
     var loading by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -29,7 +33,10 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
 
-        Text("Facemash Login", style = MaterialTheme.typography.headlineSmall)
+        Text(
+            text = "Facemash Login",
+            style = MaterialTheme.typography.headlineSmall
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -80,10 +87,34 @@ fun LoginScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(message)
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
 
         TextButton(onClick = onSignup) {
             Text("Create new account")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 🔐 Privacy Policy (Play Store compliant)
+        TextButton(
+            onClick = {
+                context.startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://www.facemash.in/privacy.html")
+                    )
+                )
+            }
+        ) {
+            Text(
+                text = "Privacy Policy",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }

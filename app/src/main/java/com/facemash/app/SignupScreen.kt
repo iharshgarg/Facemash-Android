@@ -1,5 +1,7 @@
 package com.facemash.app
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -10,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,8 +33,8 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
     var pass by remember { mutableStateOf("") }
     var confirmPass by remember { mutableStateOf("") }
 
-    var dobDisplay by remember { mutableStateOf("") }   // DD-MM-YYYY
-    var dobBackend by remember { mutableStateOf("") }   // YYYY-MM-DD
+    var dobDisplay by remember { mutableStateOf("") }
+    var dobBackend by remember { mutableStateOf("") }
     var dobMillis by remember { mutableStateOf<Long?>(null) }
 
     var sex by remember { mutableStateOf("Male") }
@@ -40,12 +43,13 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
 
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
 
     /* ───── DATE PICKER STATE ───── */
     val datePickerState = rememberDatePickerState(
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                return utcTimeMillis <= System.currentTimeMillis() // ❌ no future DOB
+                return utcTimeMillis <= System.currentTimeMillis()
             }
         }
     )
@@ -73,9 +77,7 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
                         ).format(date)
                     }
                     showDatePicker = false
-                }) {
-                    Text("OK")
-                }
+                }) { Text("OK") }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
@@ -199,17 +201,12 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
             enabled = !loading,
             onClick = {
 
-                val f = fName.trim()
-                val l = lName.trim()
-                val u = uname.trim()
-                val c = contact.trim()
-
                 val age = dobMillis?.let { calculateAge(it) } ?: 0
 
                 when {
-                    f.isEmpty() || l.isEmpty() || u.isEmpty()
-                            || c.isEmpty() || pass.isEmpty()
-                            || dobBackend.isEmpty() -> {
+                    fName.isBlank() || lName.isBlank() || uname.isBlank()
+                            || contact.isBlank() || pass.isBlank()
+                            || dobBackend.isBlank() -> {
                         message = "Please fill all fields"
                         return@Button
                     }
@@ -232,7 +229,10 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
                 scope.launch {
                     val result = withContext(Dispatchers.IO) {
                         AuthApi.signup(
-                            f, l, u, c,
+                            fName.trim(),
+                            lName.trim(),
+                            uname.trim(),
+                            contact.trim(),
                             pass,
                             dobBackend,
                             sex
@@ -244,6 +244,25 @@ fun SignupScreen(onBackToLogin: () -> Unit) {
             }
         ) {
             Text(if (loading) "Please wait..." else "Sign Up")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // 🔐 Privacy Policy acknowledgement
+        TextButton(
+            onClick = {
+                context.startActivity(
+                    Intent(
+                        Intent.ACTION_VIEW,
+                        Uri.parse("https://www.facemash.in/privacy.html")
+                    )
+                )
+            }
+        ) {
+            Text(
+                text = "By continuing, you agree to our Privacy Policy",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
