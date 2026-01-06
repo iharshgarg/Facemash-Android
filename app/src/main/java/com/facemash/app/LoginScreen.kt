@@ -40,12 +40,17 @@ fun LoginScreen(
     fun doLogin() {
         if (loading) return
 
+        if (username.isBlank() || password.isBlank()) {
+            message = "Please enter username and password"
+            return
+        }
+
         loading = true
         message = "Logging in..."
 
         scope.launch {
             val result = withContext(Dispatchers.IO) {
-                AuthApi.login(username, password)
+                AuthApi.login(username.trim(), password)
             }
 
             if (result.contains("successfully")) {
@@ -110,7 +115,7 @@ fun LoginScreen(
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
-            visualTransformation = PasswordVisualTransformation(), // 🔒 mask password
+            visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.Done,
                 keyboardType = KeyboardType.Password
