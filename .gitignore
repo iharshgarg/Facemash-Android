@@ -1,23 +1,57 @@
+# =========================
 # Android Studio / IntelliJ
+# =========================
 .idea/
 *.iml
 
+# =========================
 # Gradle
+# =========================
 .gradle/
 build/
+app/build/
 
+# =========================
 # Local configuration
+# =========================
 local.properties
 
+# =========================
 # Native build
+# =========================
 .externalNativeBuild/
 .cxx/
 
+# =========================
 # Kotlin
+# =========================
 .kotlin/
 
-# OS
+# =========================
+# OS files
+# =========================
 .DS_Store
 
+# =========================
 # Android
+# =========================
 captures/
+
+# =========================
+# Release artifacts (DO NOT COMMIT)
+# =========================
+*.apk
+*.aab
+app/release/
+
+# =========================
+# Signing keys (CRITICAL)
+# =========================
+*.jks
+*.keystore
+key.properties
+
+# =========================
+# Play Console / exports
+# =========================
+*.zip
