@@ -137,6 +137,10 @@ fun ProfileScreen(
         loadProfile()
     }
 
+    LaunchedEffect(username) {
+        friendsExpanded = false
+    }
+
     Box(modifier = Modifier.fillMaxSize()){
 
         Column(modifier = Modifier.fillMaxSize()) {
