@@ -20,7 +20,6 @@ import kotlinx.coroutines.withContext
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.layout.ContentScale
-import androidx.activity.compose.BackHandler
 
 private val FacebookBlue = androidx.compose.ui.graphics.Color(0xFF3B5998)
 
@@ -34,22 +33,21 @@ fun ChatListScreen(
     var friends by remember { mutableStateOf<List<String>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
 
-    BackHandler {
-        onBack()
-    }
+    BackHandler { onBack() }
 
     LaunchedEffect(Unit) {
         val session = withContext(Dispatchers.IO) {
             AuthApi.checkSession()
         }
 
-        // extract friends manually (simple + safe)
+        // extract friends safely
         friends =
             """"friends"\s*:\s*\[(.*?)\]""".toRegex()
                 .find(session)
                 ?.groupValues?.get(1)
                 ?.split(",")
                 ?.map { it.trim().replace("\"", "") }
+                ?.filter { it.isNotBlank() }
                 ?.reversed()
                 ?: emptyList()
 
@@ -58,6 +56,7 @@ fun ChatListScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
 
+        /* ───── TOP BAR ───── */
         Surface(
             color = FacebookBlue,
             shadowElevation = 6.dp
@@ -65,7 +64,7 @@ fun ChatListScreen(
             TopAppBar(
                 title = {
                     Text(
-                        "Chats",
+                        text = "Chats",
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 },
@@ -84,47 +83,71 @@ fun ChatListScreen(
             )
         }
 
-        if (loading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
+        /* ───── CONTENT ───── */
+        when {
+            loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-        } else {
-            LazyColumn {
-                items(friends) { friend ->
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onOpenChat(friend) }
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+            friends.isEmpty() -> {
+                // ✅ EMPTY STATE
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Add friends to start chatting",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
-                        AsyncImage(
-                            model = ImageRequest.Builder(context)
-                                .data("${ApiClient.BASE_URL}/dp/$friend")
-                                .addHeader("Cookie", ApiClient.getCookieHeader() ?: "")
-                                .allowHardware(false)
-                                .build(),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,   // ✅ IMPORTANT
+            else -> {
+                LazyColumn {
+                    items(friends) { friend ->
+
+                        Row(
                             modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                        )
+                                .fillMaxWidth()
+                                .clickable { onOpenChat(friend) }
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                            AsyncImage(
+                                model = ImageRequest.Builder(context)
+                                    .data("${ApiClient.BASE_URL}/dp/$friend")
+                                    .addHeader(
+                                        "Cookie",
+                                        ApiClient.getCookieHeader() ?: ""
+                                    )
+                                    .allowHardware(false)
+                                    .build(),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                            )
 
-                        Text(
-                            text = friend,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Text(
+                                text = friend,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+
+                        Divider()
                     }
-
-                    Divider()
                 }
             }
         }
